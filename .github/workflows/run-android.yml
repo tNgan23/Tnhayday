@@ -1,0 +1,37 @@
+name: Build ứng dụng Android thành APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Kiểm tra mã nguồn
+      uses: actions/checkout@v4
+
+    - name: Cài đặt JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+
+    - name: Khởi tạo và sửa lỗi Gradle wrapper
+      run: |
+        cd HayDayFoodManager_Android_Project/HayDayFoodManager_Android
+        gradle wrapper --gradle-version 8.0
+
+    - name: Tiến hành Build APK bản Debug
+      run: |
+        cd HayDayFoodManager_Android_Project/HayDayFoodManager_Android
+        ./gradlew assembleDebug
+
+    - name: Tải file APK lên hệ thống lưu trữ
+      uses: actions/upload-artifact@v4
+      with:
+        name: Ung-Dung-Android-APK
+        path: HayDayFoodManager_Android_Project/HayDayFoodManager_Android/app/build/outputs/apk/debug/app-debug.apk
