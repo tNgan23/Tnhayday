@@ -1,0 +1,2476 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hay Day – Food Manager</title>
+<style>
+:root {
+  --g: #57964d;
+  --d: #326e39;
+  --p: #edf6e9;
+  --bg: #f4f7f2;
+  --ink: #293329;
+  --mut: #718071;
+  --line: #e3e9df;
+  --red: #b84d40;
+  --shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px system-ui, -apple-system, sans-serif; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+/* Header Topbar */
+.top { background: linear-gradient(135deg, #79b968, #438649); color: white; padding: 16px max(16px, calc((100vw - 1160px)/2)); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.topin { max-width: 1160px; margin: auto; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 22px; font-weight: 850; letter-spacing: -0.5px; }
+.tag { font-size: 11px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; }
+.pill { font-size: 12px; border: 1px solid rgba(255,255,255,0.4); border-radius: 30px; padding: 6px 12px; background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); }
+
+/* Layout Structure */
+.layout { max-width: 1160px; margin: 18px auto; padding: 0 14px 90px; display: grid; grid-template-columns: 215px 1fr; gap: 16px; }
+.side, .panel, .card { background: white; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.side { padding: 12px; height: max-content; position: sticky; top: 12px; }
+.nav { display: flex; flex-direction: column; gap: 6px; }
+.nav button { border: 0; background: none; text-align: left; padding: 12px 14px; border-radius: 12px; color: #475447; font-weight: 650; transition: all 0.2s; }
+.nav button.active, .nav button:hover { background: var(--p); color: var(--d); transform: translateX(3px); }
+
+main { min-width: 0; }
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.heading h1 { font-size: 22px; margin: 0; color: #1e291e; }
+.muted { color: var(--mut); font-size: 13px; }
+
+/* Buttons & Inputs */
+.btn { border: 0; border-radius: 11px; padding: 10px 15px; font-weight: 700; transition: all 0.15s; }
+.btn:active { transform: scale(0.97); }
+.primary { background: var(--g); color: white; box-shadow: 0 3px 8px rgba(87,150,77,0.3); }
+.primary:hover { background: #4a8441; }
+.soft { background: var(--p); color: var(--d); }
+.soft:hover { background: #dcebd6; }
+.danger { background: #fff0ed; color: var(--red); }
+.plain { background: #f0f3ee; color: #475447; }
+.small { padding: 7px 11px; font-size: 13px; border-radius: 9px; }
+
+.search, .field input, .field select, .field textarea { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: white; outline: none; transition: border-color 0.2s; }
+.search:focus, .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--g); }
+.search { width: 100%; }
+
+.row { display: flex; gap: 10px; align-items: center; }
+.between { justify-content: space-between; }
+.wrap { flex-wrap: wrap; }
+
+/* Grids & Cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; }
+.food { border: 1px solid var(--line); border-radius: 14px; background: white; padding: 11px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+.food:hover { border-color: #8ebb82; transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+.food img { width: 100%; height: 105px; object-fit: contain; background: #fafbf8; border-radius: 10px; }
+.food h3 { font-size: 14px; margin: 8px 0 3px; font-weight: 700; color: #283628; }
+.food small { color: var(--mut); font-size: 12px; }
+
+.panel { padding: 18px; margin-bottom: 16px; }
+.panel h3 { margin-top: 0; margin-bottom: 14px; font-size: 16px; color: #243324; }
+
+/* Clickable Stats Overview */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stat { padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+.stat:hover { border-color: #8ebb82; background: #fcfdfb; transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,0.06); }
+.stat b { font-size: 28px; color: var(--d); display: block; line-height: 1.1; }
+.stat span { font-size: 12px; color: var(--mut); font-weight: 600; margin-top: 4px; display: block; }
+
+.machine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+.machine { padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: white; transition: all 0.2s; }
+.machine-clickable { cursor: pointer; }
+.machine-clickable:hover { border-color: var(--g); transform: translateY(-2px); box-shadow: 0 5px 14px rgba(0,0,0,0.07); }
+.machine img { width: 100%; height: 95px; object-fit: contain; background: #fafbf8; border-radius: 10px; }
+.machine h3 { font-size: 15px; margin: 8px 0 4px; font-weight: 750; }
+
+.empty { padding: 28px 16px; text-align: center; border: 1px dashed var(--line); border-radius: 14px; color: var(--mut); background: white; font-size: 13px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.field label { font-size: 13px; font-weight: 700; color: #455444; }
+.field textarea { min-height: 70px; }
+.plan-progress {height:9px;background:#edf2e9;border-radius:20px;overflow:hidden;margin:8px 0}
+.plan-progress > span {display:block;height:100%;background:var(--g);border-radius:20px}
+.plan-machine {border:1px solid var(--line);border-radius:12px;padding:12px;margin:9px 0;background:#fbfdf9}
+.plan-item {display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.plan-qty-input {width:68px;padding:7px;border:1px solid var(--line);border-radius:8px;text-align:center}
+.plan-item:last-child {border-bottom:0}
+.qty-control {display:flex;align-items:center;gap:5px}
+.qty-control button {border:0;border-radius:8px;background:var(--p);color:var(--d);font-weight:800;width:30px;height:30px}
+.timer-card{border:1px solid var(--line);border-radius:14px;padding:13px;margin:10px 0;background:#fff;display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:12px;align-items:center}
+.timer-card.done{border-color:#a9c99e;background:#f7fbf4}.timer-photo{width:58px;height:58px;object-fit:contain;background:#f7faf4;border-radius:10px}.timer-clock{font-size:22px;font-weight:850;letter-spacing:.5px;color:var(--d);font-variant-numeric:tabular-nums}.timer-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.account-card{border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;background:#fff}\n.account-role{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;background:#edf5e9;color:#356f3a;font-size:11px;font-weight:800;margin-top:5px}\n.account-card.role-warehouse{border-left:4px solid #d5a34b}.account-card.role-ingredient{border-left:4px solid #83a9c9}.account-card.role-food{border-left:4px solid #75a96a}
+.account-stats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.account-stat{background:#f4f7f1;border-radius:9px;padding:7px 10px;font-size:13px}
+.status-ready{color:#9a5b00;font-weight:800}.status-running{color:#346a9a;font-weight:800}.status-idle{color:#64805a;font-weight:700}
+@media(max-width:520px){.timer-card{grid-template-columns:48px minmax(0,1fr)}.timer-photo{width:48px;height:48px}.timer-actions{grid-column:1/-1;justify-content:flex-start}.timer-clock{font-size:20px}}
+@media(max-width:520px){.plan-item{grid-template-columns:minmax(0,1fr) auto auto}.plan-item .qty-control{grid-column:1/-1;justify-content:flex-end}}
+
+/* Dialog & Popups */
+dialog { border: 0; border-radius: 20px; padding: 0; width: min(620px, calc(100% - 24px)); max-height: 88vh; box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden; }
+dialog::backdrop { background: rgba(18, 26, 18, 0.55); backdrop-filter: blur(3px); }
+.modal { padding: 20px; overflow-y: auto; max-height: 88vh; }
+.modal h2 { margin: 0 0 14px; font-size: 20px; color: #213021; }
+.modalfoot { display: flex; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+
+.popup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.popup-head h2 { margin: 0; font-size: 20px; }
+.popup-close { width: 34px; height: 34px; border: 0; border-radius: 10px; background: #f0f4ed; color: #536451; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+.popup-close:hover { background: #e2eadf; }
+
+/* Recipe Details */
+#recipeDialog { width: min(560px, calc(100% - 24px)); border-radius: 22px; background: #fff; }
+.recipe-shell { overflow: hidden; border-radius: 22px; background: #fff; }
+.recipe-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 20px 14px; }
+.recipe-title { margin: 0!important; font-size: 22px; font-weight: 800; color: #263628; }
+.recipe-hero { display: flex; align-items: center; gap: 15px; margin: 0 20px; padding: 14px; border: 1px solid #e8eee4; border-radius: 16px; background: linear-gradient(120deg,#f8fbf5,#eff6eb); }
+.recipe-food-photo { width: 90px; height: 85px; flex: 0 0 90px; object-fit: contain; border-radius: 12px; background: #fff; }
+.recipe-meta { min-width: 0; }
+.recipe-machine { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 30px; background: #e4f0df; color: #39713c; font-size: 12px; font-weight: 750; }
+.recipe-note { margin-top: 7px; color: #748174; font-size: 12px; line-height: 1.45; }
+.recipe-section { padding: 18px 20px 8px; }
+.recipe-section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; font-size: 16px; color: #2d3b2d; font-weight: 750; }
+.recipe-count { font-size: 11px; font-weight: 700; color: #64815e; background: #edf5e9; padding: 4px 9px; border-radius: 20px; }
+.recipe-ingredients { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.recipe-ingredient { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px; border: 1px solid #e9eee6; border-radius: 14px; background: #fff; }
+.recipe-ingredient-photo { width: 42px; height: 42px; flex: 0 0 42px; object-fit: contain; border-radius: 10px; background: #f5f8f2; }
+.recipe-ingredient-name { min-width: 0; flex: 1; font-size: 13px; font-weight: 700; color: #354435; }
+.recipe-qty { flex: 0 0 auto; min-width: 32px; padding: 5px 8px; text-align: center; border-radius: 8px; background: #edf5e9; color: #39713c; font-size: 13px; font-weight: 850; }
+.recipe-footer { display: flex; justify-content: flex-end; gap: 9px; padding: 16px 20px 20px; border-top: 1px solid #edf1ea; margin-top: 12px; }
+
+/* Image Pickers */
+.food-image-card { display: flex; align-items: center; gap: 16px; padding: 14px; border: 1px dashed #b8cdb1; border-radius: 14px; background: #fbfdf9; }
+.food-image-preview { width: 85px; height: 85px; flex: 0 0 85px; display: flex; align-items: center; justify-content: center; border: 1px solid #e1eadc; border-radius: 12px; background: #fff; }
+.food-image-preview img { width: 100%; height: 100%; object-fit: contain; }
+.filebtn { display: inline-flex; align-items: center; justify-content: center; border: 1px dashed #a9c5a1; border-radius: 9px; padding: 8px 12px; color: var(--d); font-size: 12px; cursor: pointer; background: #fff; font-weight: 650; }
+.filebtn input { display: none; }
+.ingrow { display: grid; grid-template-columns: 42px minmax(0,1fr) 65px auto 35px; gap: 6px; margin: 7px 0; align-items: center; }
+.ingrow input { min-width: 0; width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.ingrow .ing-preview { width: 38px; height: 38px; object-fit: contain; border: 1px solid var(--line); border-radius: 8px; background: #fafbf8; }
+
+/* Mobile Navigation */
+.mobilebar { display: none; }
+@media(max-width:760px){
+  .layout { display: block; margin: 12px auto; }
+  .side { display: none; }
+  .mobilebar { display: flex; position: fixed; z-index: 99; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--line); justify-content: space-around; padding: 6px 2px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 12px rgba(0,0,0,0.05); }
+  .mobilebar button { border: 0; background: none; color: #647164; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; }
+  .mobilebar button.active { color: var(--d); font-weight: 800; }
+  .mobilebar span { font-size: 18px; }
+  .stats { grid-template-columns: repeat(2,1fr); }
+  .recipe-ingredients { grid-template-columns: 1fr; }
+}
+
+/* ===== UI refinement: compact, consistent, mobile-first ===== */
+:root {
+  --g:#5b984e; --d:#356f3a; --p:#edf5e9; --bg:#f5f7f3;
+  --ink:#263327; --mut:#748174; --line:#e7ece4;
+  --shadow:0 2px 10px rgba(35,55,32,.045);
+}
+body {font-size:14px; background:var(--bg); line-height:1.45;}
+.top {padding:12px max(16px, calc((100vw - 1160px)/2));}
+.brand {font-size:20px;}
+.layout {margin:14px auto; gap:14px; grid-template-columns:190px minmax(0,1fr);}
+.side {padding:9px; border-radius:14px;}
+.nav {gap:3px;}
+.nav button {padding:10px 11px; font-size:13px; border-radius:10px;}
+.nav button.active,.nav button:hover {transform:none;}
+.heading {margin-bottom:12px;}
+.heading h1 {font-size:20px; letter-spacing:-.35px;}
+.panel {padding:15px; margin-bottom:13px; border-radius:14px;}
+.panel h3 {font-size:15px; margin-bottom:11px;}
+.stats {gap:9px;}
+.stat {padding:13px; border-radius:12px;}
+.stat b {font-size:25px;}
+.grid,.machine-grid {gap:10px;}
+.grid {grid-template-columns:repeat(auto-fill,minmax(135px,1fr));}
+.food,.machine {padding:9px; border-radius:12px; box-shadow:none;}
+.food img {height:88px;}
+.machine img {height:82px;}
+.food h3,.machine h3 {font-size:13px; margin:7px 0 3px;}
+.btn {padding:9px 12px; border-radius:10px; font-size:13px;}
+.btn.small {padding:6px 9px; font-size:12px;}
+.search,.field input,.field select,.field textarea {padding:9px 11px; border-radius:9px; font-size:14px;}
+.empty {padding:22px 13px; border-radius:12px;}
+.account-card,.timer-card {border-radius:12px; padding:11px;}
+.account-stat {font-size:12px; padding:6px 8px;}
+.recipe-hero {padding:11px; margin:0 15px;}
+.recipe-section {padding:15px 15px 7px;}
+.recipe-head {padding:16px 15px 12px;}
+.recipe-footer {padding:13px 15px 16px;}
+.recipe-ingredient {padding:8px; border-radius:11px;}
+.recipe-ingredient-photo {width:36px;height:36px;flex-basis:36px;}
+.ingrow {grid-template-columns:36px minmax(0,1fr) 54px auto 32px; gap:5px;}
+.ingrow .ing-preview {width:34px;height:34px;}
+button:focus-visible,input:focus-visible,select:focus-visible {outline:2px solid #78ad6d;outline-offset:2px;}
+@media(max-width:760px){
+  .layout {margin:10px auto; padding:0 11px calc(84px + env(safe-area-inset-bottom));}
+  .top {padding:11px 14px;}
+  .brand {font-size:18px;}
+  .tag {font-size:9px; letter-spacing:.35px;}
+  .pill {font-size:10px; padding:5px 9px;}
+  .heading {align-items:flex-start;}
+  .heading h1 {font-size:19px;}
+  .heading .btn {white-space:nowrap; padding:8px 10px;}
+  .stats {gap:8px;}
+  .stat {padding:11px;}
+  .stat b {font-size:23px;}
+  .panel {padding:12px; margin-bottom:10px;}
+  .grid {grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px;}
+  .machine-grid {grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px;}
+  .food img {height:82px;}
+  .mobilebar {display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; padding:5px 4px calc(5px + env(safe-area-inset-bottom));}
+  .mobilebar button {min-width:0; font-size:10px; padding:4px 1px; gap:1px;}
+  .mobilebar button span {font-size:17px; line-height:1.2;}
+  .mobilebar button.active {background:#f0f6ed; border-radius:9px;}
+  .recipe-ingredients {grid-template-columns:1fr;}
+  .timer-card {grid-template-columns:46px minmax(0,1fr) auto; gap:9px;}
+  .timer-photo {width:46px;height:46px;}
+}
+@media(max-width:390px){
+  .heading {gap:7px;}
+  .heading .btn {font-size:11px;padding:8px;}
+  .timer-card {grid-template-columns:42px minmax(0,1fr);}
+  .timer-photo {width:42px;height:42px;}
+  .timer-actions {grid-column:2;justify-content:flex-start;}
+}
+
+
+.catalog-action-row { gap: 14px; align-items: center; }
+.catalog-action-row .btn,
+.catalog-action-row .filebtn { min-height: 54px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.catalog-action-row .filebtn { cursor: pointer; }
+
+/* Account management – clean, clearly separated role groups */
+.account-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:4px 0 14px}
+.account-overview-card{font:inherit;text-align:left;color:inherit;width:100%;display:flex;align-items:center;gap:11px;min-width:0;padding:14px 15px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px rgba(35,55,32,.035)}
+.account-overview-card .overview-icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:11px;background:#f2f5ef;font-size:20px}
+.account-overview-card b{display:block;font-size:23px;line-height:1.1;color:#263327;font-weight:850}
+.account-overview-card span:last-child{display:block;margin-top:4px;color:var(--mut);font-size:11px;font-weight:650;line-height:1.25}
+.account-overview-card.warehouse .overview-icon{background:#fff5e5}.account-overview-card.ingredient .overview-icon{background:#edf5fc}.account-overview-card.food .overview-icon{background:#edf6e9}.account-overview-card.harvest .overview-icon{background:#fff3e3}
+.account-guide{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;margin-bottom:18px;border:1px solid #e4ebdf;border-radius:13px;background:#f9fbf7;color:#425342}
+.account-guide-icon{font-size:20px}.account-guide b{font-size:13px}.account-guide p{margin:3px 0 0;color:var(--mut);font-size:12px;line-height:1.5}
+.account-groups{display:grid;gap:15px}.account-group{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 2px 9px rgba(35,55,32,.035)}
+.account-group-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);background:#fbfcfa}
+.account-group-title{display:flex;align-items:center;gap:12px;min-width:0}.group-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:12px;background:#f0f3ed;font-size:22px}
+.account-group.role-warehouse .group-icon{background:#fff4e3}.account-group.role-ingredient .group-icon{background:#edf5fc}.account-group.role-food .group-icon{background:#edf6e9}
+.account-group-title h2{margin:0;font-size:16px;color:#293629}.account-group-title p{margin:3px 0 0;color:var(--mut);font-size:12px;line-height:1.4}
+.account-group-tools{display:flex;align-items:center;gap:9px;flex-shrink:0}.group-count{padding:5px 9px;border-radius:20px;background:#f0f3ee;color:#596958;font-size:11px;font-weight:750;white-space:nowrap}
+.account-group-body{padding:4px 16px 12px}.account-group-empty{display:flex;align-items:center;gap:12px;padding:15px 2px;color:#596958}.account-group-empty>span{font-size:23px;opacity:.8}.account-group-empty div{flex:1;min-width:0}.account-group-empty b{font-size:13px;color:#425142}.account-group-empty p{margin:3px 0 0;font-size:12px;color:var(--mut);line-height:1.4}
+.account-card{margin:10px 0;padding:14px 15px;border-radius:12px;box-shadow:none}.account-card.role-warehouse{border-left:4px solid #d5a34b}.account-card.role-ingredient{border-left:4px solid #83a9c9}.account-card.role-food{border-left:4px solid #75a96a}
+.account-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.account-name-wrap{display:flex;align-items:center;gap:10px;min-width:0}.account-avatar{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:#f2f5ef;font-size:18px}.account-name{display:flex;flex-direction:column;gap:3px;min-width:0}.account-name b{font-size:14px}.account-name>span{font-size:11px}.account-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.account-purpose,.account-note{margin:10px 0 0;padding:9px 11px;border-radius:9px;background:#f7f9f6;font-size:12px;line-height:1.5}.account-machine-settings{margin-top:10px;padding-top:9px;border-top:1px solid #edf0eb}.account-machine-settings summary{cursor:pointer;color:#536453;font-size:12px;font-weight:700}.account-machine-settings summary small{font-weight:400;color:var(--mut)}
+.account-first-use{display:flex;gap:12px;align-items:flex-start;padding:15px 17px;border:1px dashed #dce5d7;border-radius:13px;background:#fff}.account-first-use>span{font-size:23px}.account-first-use b{font-size:13px}.account-first-use p{margin:3px 0 0;color:var(--mut);font-size:12px;line-height:1.5}
+@media(max-width:900px){.account-overview{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.account-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.account-overview-card{padding:11px;gap:8px}.account-overview-card .overview-icon{width:33px;height:33px;flex-basis:33px;font-size:17px}.account-overview-card b{font-size:20px}.account-group-head{align-items:flex-start;padding:13px;flex-direction:column}.account-group-tools{width:100%;justify-content:space-between}.account-group-title p{font-size:11px}.account-group-body{padding:2px 9px 8px}.account-card-head{align-items:flex-start;flex-direction:column}.account-actions{justify-content:flex-start;width:100%}.account-group-empty{flex-wrap:wrap}.account-group-empty div{flex-basis:calc(100% - 50px)}.account-group-empty button{margin-left:35px}}
+
+
+/* Account form dialog */
+#accountDialog{width:min(540px,calc(100% - 28px));border:1px solid #e4eadf;border-radius:20px;background:#fff;box-shadow:0 24px 70px rgba(25,45,25,.22)}
+#accountDialog::backdrop{background:rgba(24,35,24,.48);backdrop-filter:blur(3px)}
+.account-form{padding:22px}
+.account-form .popup-head{margin-bottom:8px;padding-bottom:0;border:0}
+.account-form-subtitle{margin:0 0 18px;color:var(--mut);font-size:13px;line-height:1.5}
+.account-form .field{margin:0 0 18px}
+.account-form .field input{width:100%;min-height:44px}
+.role-picker{display:grid;gap:9px}
+.role-option{position:relative;display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.role-option:hover{border-color:#a8c69f;background:#fbfdf9}
+.role-option:has(input:checked){border:2px solid var(--g);padding:11px;background:#f5faf2;box-shadow:0 0 0 3px rgba(87,150,77,.08)}
+.role-option input{width:17px;height:17px;accent-color:var(--g);flex:0 0 auto}
+.role-option-icon{display:grid;place-items:center;width:40px;height:40px;flex:0 0 40px;border-radius:11px;background:#f1f4ef;font-size:21px}
+.role-option[data-role="warehouse"] .role-option-icon{background:#fff4e3}
+.role-option[data-role="ingredient"] .role-option-icon{background:#edf5fc}
+.role-option[data-role="food"] .role-option-icon{background:#edf6e9}
+.role-option-copy{min-width:0;flex:1}
+.role-option-copy b{display:block;color:#2d3b2d;font-size:13px}
+.role-option-copy small{display:block;margin-top:3px;color:var(--mut);font-size:11px;line-height:1.4}
+.role-option-check{color:var(--g);font-size:17px;opacity:0}
+.role-option:has(input:checked) .role-option-check{opacity:1}
+.account-form .modalfoot{padding-top:15px;border-top:1px solid #edf1ea}
+@media(max-width:520px){.account-form{padding:17px}.role-option{padding:10px}.role-option:has(input:checked){padding:9px}}
+
+
+/* Layout fix: keep radio controls compact inside the role cards */
+#accountDialog{
+  box-sizing:border-box;
+  width:min(540px,calc(100vw - 32px));
+  max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 32px);
+  overflow-x:hidden;
+}
+#accountDialog .account-form{
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  overflow-x:hidden;
+}
+#accountDialog .field{min-width:0;width:100%}
+#accountDialog .role-picker{width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}
+#accountDialog .role-option{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+}
+#accountDialog .role-option input[type="radio"]{
+  display:block;
+  flex:0 0 17px;
+  width:17px;
+  min-width:17px;
+  max-width:17px;
+  height:17px;
+  margin:0;
+  padding:0;
+}
+#accountDialog .role-option-copy{flex:1;min-width:0;overflow-wrap:anywhere}
+#accountDialog .role-option-copy b,
+#accountDialog .role-option-copy small{overflow-wrap:anywhere}
+
+
+.account-overview-card{cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.account-overview-card:hover{transform:translateY(-2px);border-color:#a8c69f;box-shadow:0 5px 16px rgba(35,75,32,.09)}
+.account-overview-card.active{border:2px solid var(--g);padding:13px 14px;background:#f5faf2;box-shadow:0 0 0 3px rgba(87,150,77,.08)}
+.account-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:-3px 0 12px}
+.account-filter-hint{font-size:12px;color:var(--mut)}
+.role-manager-list{display:grid;gap:8px;margin:10px 0 18px}
+.role-manager-item{display:grid;grid-template-columns:36px minmax(0,1fr) minmax(120px,1.5fr);align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:11px}
+.role-manager-item .role-manager-icon{font-size:20px;text-align:center}
+.role-manager-item input{min-width:0;width:100%}
+.role-manager-item small{grid-column:2/-1;color:var(--mut);font-size:10px}
+.role-add-controls{display:flex;gap:8px}
+.role-add-controls input{flex:1;min-width:0}
+.account-group.role-custom .group-icon{background:#f1f2f7}
+@media(max-width:600px){.account-toolbar{align-items:flex-start;flex-direction:column}.role-manager-item{grid-template-columns:30px minmax(0,1fr)}.role-manager-item input{grid-column:2}.role-add-controls{flex-direction:column}}
+
+
+
+.inventory-stat-click{font:inherit;text-align:left;width:100%;color:inherit;cursor:pointer;transition:border-color .18s,transform .18s,box-shadow .18s}
+.inventory-stat-click:hover{border-color:#91b987;transform:translateY(-2px);box-shadow:0 5px 13px rgba(35,55,32,.08)}
+.inventory-stat-click:focus-visible{outline:2px solid #78ad6d;outline-offset:2px}
+
+/* Smart inventory */
+.inventory-stats{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:14px}
+.inventory-item{border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0;background:#fff}
+.inventory-item-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.inventory-account-card{border:1px solid var(--line);border-radius:14px;background:#fff;margin:10px 0;overflow:hidden}
+.inventory-account-toggle{width:100%;border:0;background:transparent;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;color:inherit;cursor:pointer}
+.inventory-account-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.inventory-summary-chip{font-size:11px;padding:4px 8px;border-radius:20px;background:#f1f6ef;color:#456b43}
+.inventory-account-details{padding:0 12px 10px}
+.inventory-chevron{font-size:18px;color:var(--mut);transition:transform .2s}
+.inventory-account-card.open .inventory-chevron{transform:rotate(180deg)}
+.inventory-account-row{display:grid;grid-template-columns:minmax(105px,1fr) auto minmax(92px,auto) auto;gap:9px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.inventory-min-input,.inventory-replenish-input{width:82px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;text-align:center;background:#fff}
+.inventory-shortage-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.inventory-auto-badge{background:#edf6e9;color:#356f3a;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap}
+.inventory-shortage-input{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.inventory-status{font-size:11px;font-weight:750;padding:4px 8px;border-radius:20px;background:#fff3e6;color:#9a5b00}
+@media(max-width:760px){.inventory-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.inventory-account-row{grid-template-columns:minmax(0,1fr) auto;gap:7px}.inventory-account-row .inventory-min-wrap{grid-column:1}.inventory-account-row .inventory-row-actions{grid-column:2;grid-row:2}.inventory-shortage-row{grid-template-columns:minmax(0,1fr) auto}.inventory-shortage-row .inventory-shortage-input{grid-column:1}.inventory-shortage-row .inventory-shortage-actions{grid-column:2;grid-row:2}}
+
+/* Inventory views */
+.inventory-summary-item,.inventory-catalog-item{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line)}
+.inventory-summary-item:last-child,.inventory-catalog-item:last-child{border-bottom:0}
+.inventory-emoji{width:48px;height:48px;display:grid;place-items:center;flex:0 0 48px;border-radius:13px;background:#f0f6ed;font-size:25px;overflow:hidden}
+.inventory-summary-copy{flex:1;min-width:0}
+.inventory-summary-copy b{display:block;font-size:15px}
+.inventory-summary-copy small{color:var(--mut);font-size:12px}
+.inventory-total{font-weight:850;color:var(--d);font-size:21px;text-align:right;white-space:nowrap}
+.inventory-total small{display:block;font-size:11px;color:var(--mut);font-weight:500}
+.inventory-catalog-actions{display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:600px){.inventory-summary-item,.inventory-catalog-item{gap:9px}.inventory-emoji{width:42px;height:42px;flex-basis:42px}.inventory-total{font-size:18px}.inventory-summary-copy b{font-size:14px}}
+
+.inventory-history-table{width:100%;border-collapse:collapse;font-size:12px;min-width:620px}.inventory-history-table th,.inventory-history-table td{padding:10px 9px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}.inventory-history-table th{background:#f7faf5;color:#61715f;font-weight:800;white-space:nowrap}.inventory-history-table tr:last-child td{border-bottom:0}
+</style>
+
+<style id="add-action-polish">
+  .heading .btn, .inventory-stats + .panel .btn { white-space: normal; }
+  @media(max-width:760px){
+    #v-inventory .heading .row{width:100%;gap:8px}
+    #v-inventory .heading .row .btn{flex:1 1 auto;min-height:40px}
+  }
+</style>
+
+<style id="ingredient-catalog-select-style">
+.ingrow{display:grid!important;grid-template-columns:48px minmax(150px,1fr) minmax(120px,1fr) 72px auto auto!important;gap:8px!important;align-items:center!important}
+.ing-catalog{min-width:0;width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:#fff;color:inherit;font:inherit}
+.ing-preview{width:44px;height:44px;object-fit:contain;border-radius:10px;background:#f7faf7;border:1px solid #e1ebe3}
+@media(max-width:650px){.ingrow{grid-template-columns:42px minmax(0,1fr) 64px auto auto!important}.ing-catalog{grid-column:2/-1;grid-row:1}.ing-name{grid-column:2}.ing-preview{grid-column:1;grid-row:1/3}.ing-qty{grid-column:3}.ing-image{grid-column:4}.ingrow .btn{grid-column:5}}
+</style>
+
+
+<style id="inventory-grid-polish">
+.inventory-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 205px;gap:9px;margin-top:10px}
+.inventory-card-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.inventory-tile{position:relative;display:grid;grid-template-columns:42px minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;gap:5px 8px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 1px 4px rgba(35,55,32,.025)}
+.inventory-tile-icon{grid-column:1;grid-row:1/3;width:42px;height:42px;display:grid;place-items:center;border-radius:9px;background:#f4f7f1;overflow:hidden;font-size:24px}
+.inventory-tile-icon img{width:100%;height:100%;object-fit:contain}
+.inventory-tile-copy{grid-column:2;grid-row:1;min-width:0}
+.inventory-tile-copy b{display:block;font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+.inventory-tile-copy small{display:block;margin-top:3px;color:var(--mut);font-size:10px;line-height:1.25}
+.inventory-tile-qty{grid-column:3;grid-row:1;font-size:15px;font-weight:850;color:#263327;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.inventory-tile-detail{grid-column:2/4;grid-row:2;min-width:0;color:var(--mut);font-size:10px;line-height:1.3;overflow-wrap:anywhere}
+.inventory-tile-actions{grid-column:1/-1;display:flex;gap:5px;flex-wrap:wrap;padding-top:7px;margin-top:3px;border-top:1px solid #eef1eb}
+.inventory-tile-actions .btn{flex:1 1 auto;padding:6px 7px;font-size:10px}
+.inventory-account-details{padding:0 12px 12px}
+.inventory-catalog-tile{grid-template-rows:auto auto}
+.inventory-catalog-tile .inventory-tile-copy{grid-row:1/3}
+.inventory-tile-actions .btn{white-space:nowrap}
+@media(max-width:1050px){.inventory-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.inventory-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.inventory-toolbar{grid-template-columns:minmax(0,1fr) 155px}.inventory-tile{padding:9px;grid-template-columns:36px minmax(0,1fr) auto;gap:5px 6px}.inventory-tile-icon{width:36px;height:36px;font-size:21px}.inventory-tile-copy b{font-size:12px}.inventory-tile-qty{font-size:14px}.inventory-tile-actions .btn{font-size:10px;padding:6px 5px}}
+@media(max-width:420px){.inventory-toolbar{grid-template-columns:1fr}.inventory-card-grid{gap:7px}.inventory-tile{grid-template-columns:32px minmax(0,1fr) auto;padding:8px 7px}.inventory-tile-icon{width:32px;height:32px}.inventory-tile-qty{font-size:13px}.inventory-tile-actions{gap:4px}.inventory-tile-actions .btn{font-size:9px}}
+</style>
+
+</head>
+<body>
+
+<header class="top">
+  <div class="topin">
+    <div>
+      <div class="brand">🌾 HAY DAY</div>
+      <div class="tag">FOOD & PRODUCTION MANAGER</div>
+    </div>
+    <div class="row wrap" style="justify-content:flex-end">
+      <button class="btn soft small" id="undoBtn" onclick="undoLastChange()" disabled title="Hoàn tác thay đổi gần nhất">↶ Undo</button>
+      <div class="pill" id="syncStatus">● Lưu trên thiết bị</div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="side"><nav class="nav" id="sideNav"></nav></aside>
+  <main>
+    <!-- VIEW: DASHBOARD -->
+    <section class="view active" id="v-dashboard">
+      <div class="heading">
+        <div>
+          <h1>Tổng quan</h1>
+          <div class="muted">Tình hình kho công thức và sản xuất</div>
+        </div>
+        <button class="btn primary" onclick="openFood()">＋ Thêm Food</button>
+      </div>
+
+      <!-- Interactive Stat Cards -->
+      <div class="stats" id="stats"></div>
+
+      <div class="panel" style="margin-top: 16px;">
+        <div class="row between wrap" style="margin-bottom:11px">
+          <h3 style="margin:0">Food theo máy sản xuất</h3>
+          <span class="muted" id="machineStatsCount"></span>
+        </div>
+        <div id="machineStats" class="machine-grid"></div>
+        <div id="machineStatsMore" style="display:none;text-align:center;margin-top:14px">
+          <button class="btn soft small" id="machineStatsToggle" type="button" onclick="toggleDashboardMachines()">Xem thêm máy ↓</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Kế hoạch gần đây</h3>
+        <div id="recentPlans"></div>
+      </div>
+    </section>
+
+    <!-- VIEW: FOODS -->
+    <section class="view" id="v-foods">
+      <div class="heading">
+        <div><h1>Danh sách Food</h1><div class="muted">Quản lý ảnh, công thức và nguyên liệu</div></div>
+        <button class="btn primary" onclick="openFood()">＋ Thêm Food</button>
+      </div>
+      <div class="row wrap" style="margin-bottom:12px">
+        <input class="search" id="foodSearch" placeholder="Tìm tên Food..." style="flex:1;min-width:150px">
+        <select class="search" id="foodMachine" style="width:auto"><option value="">Tất cả máy</option></select>
+      </div>
+      <div class="muted" id="foodCount" style="margin-bottom:10px"></div>
+      <div id="foodGrid" class="grid"></div>
+    </section>
+
+    <!-- VIEW: MACHINES -->
+    <section class="view" id="v-machines">
+      <div class="heading">
+        <div><h1>Máy sản xuất</h1><div class="muted">Tự tạo và phân loại máy</div></div>
+        <button class="btn primary" onclick="openMachine()">＋ Thêm máy</button>
+      </div>
+      <div id="machineGrid" class="machine-grid"></div>
+    </section>
+
+    <!-- VIEW: CALCULATOR -->
+    <section class="view" id="v-calc">
+      <div class="heading"><div><h1>Tính nguyên liệu</h1><div class="muted">Chọn Food và số lượng cần sản xuất</div></div></div>
+      <div id="calcTarget"></div>
+      <div class="panel"><input id="calcSearch" class="search" placeholder="Tìm Food..."><div id="calcFoodList" style="margin-top:10px"></div></div>
+      <div class="panel">
+        <div class="heading"><h3 style="margin:0">Tổng nguyên liệu dự kiến</h3><button id="calcActionBtn" class="btn primary" onclick="savePlanFromCalc()">＋ Tạo kế hoạch</button></div>
+        <div id="calcTotals"></div>
+      </div>
+    </section>
+
+    <!-- VIEW: INVENTORY -->
+    <section class="view" id="v-inventory">
+      <div class="heading"><div><h1>Kho nguyên liệu</h1><div class="muted">Danh mục dùng chung · tồn kho riêng từng acc · tổng hợp toàn bộ</div></div></div>
+      <div class="row wrap" style="margin-bottom:14px">
+        <button class="btn primary" onclick="addIngredientCatalogItem()">＋ Thêm nguyên liệu</button>
+        <button class="btn soft" onclick="openInventoryAdjust()">＋ Nhập / điều chỉnh kho</button>
+        <button class="btn soft" onclick="transferInventory()">⇄ Chuyển giữa acc</button>
+      </div>
+      <div class="stats inventory-stats" id="inventoryStats"></div>
+      <div class="panel">
+        <div class="row wrap" style="gap:8px;margin-bottom:12px" id="inventoryTabs">
+          <button class="btn primary" data-inv-tab="accounts" onclick="setInventoryTab('accounts')">Theo từng acc</button>
+          <button class="btn soft" data-inv-tab="summary" onclick="setInventoryTab('summary')">Kho tổng</button>
+          <button class="btn soft" data-inv-tab="catalog" onclick="setInventoryTab('catalog')">Danh mục</button>
+          <button class="btn soft" data-inv-tab="history" onclick="setInventoryTab('history')">Lịch sử</button>
+        </div>
+        <div class="inventory-toolbar"><input class="search" id="inventorySearch" placeholder="Tìm nguyên liệu..." oninput="renderInventory()"><select class="search" id="inventorySort" aria-label="Sắp xếp kho nguyên liệu" onchange="inventorySort=this.value;renderInventory()"><option value="qty-desc">Số lượng giảm dần</option><option value="qty-asc">Số lượng tăng dần</option><option value="name-asc">Tên A → Z</option><option value="name-desc">Tên Z → A</option></select></div>
+        <div id="inventorySummary" style="margin-top:12px"></div>
+        <div id="inventoryList" style="margin-top:12px"></div>
+        <div id="inventoryCatalog" style="margin-top:12px"></div>
+        <div id="inventoryHistory" style="margin-top:12px" hidden></div>
+      </div>
+      <div class="panel" id="inventoryShortagePanel"><div class="row between wrap"><div><h3 style="margin:0">Nguyên liệu cần bổ sung</h3><div class="muted">Tự tính theo mức tồn tối thiểu đã cài cho từng acc.</div></div><span class="inventory-auto-badge">⚡ Tự tính</span></div><div id="inventoryShortage" style="margin-top:10px"></div></div>
+    </section>
+
+    <!-- VIEW: AUTO PLANNER -->
+    <section class="view" id="v-auto">
+      <div class="heading"><div><h1>Lịch & phân chia sản xuất</h1><div class="muted">Tự chia sản phẩm theo máy, acc và thời gian dự kiến</div></div><button class="btn soft" onclick="go('accounts')">Quản lý acc</button></div>
+      <div class="panel"><h3>Yêu cầu sản xuất</h3><div id="autoDemandList"></div><div class="row wrap" style="margin-top:12px"><button class="btn soft" onclick="addAutoDemand()">＋ Thêm sản phẩm</button><button class="btn primary" onclick="runAutoPlanner()">⚡ Tự động phân chia</button></div></div>
+      <div id="autoResult"></div>
+      <div class="panel"><h3>Lịch sản xuất đã lập</h3><div id="scheduleList"></div></div>
+    </section>
+
+    <!-- VIEW: PLANS -->
+    <section class="view" id="v-plans">
+      <div class="heading">
+        <div><h1>Kế hoạch sản xuất</h1><div class="muted">Nhiều kế hoạch độc lập và checklist</div></div>
+        <button class="btn primary" onclick="newPlan()">＋ Tạo kế hoạch</button>
+      </div>
+      <div id="planList"></div>
+    </section>
+
+    <!-- VIEW: ACTIVE PRODUCTION -->
+    <section class="view" id="v-production">
+      <div class="heading"><div><h1>Đang sản xuất</h1><div class="muted">Đếm ngược và theo dõi các Food đang chạy</div></div><button class="btn soft" onclick="requestTimerNotifications()">🔔 Bật thông báo</button></div>
+      <div class="panel"><div class="row between wrap"><div><b id="timerSummary">Chưa có mẻ sản xuất nào</b><div class="muted" id="timerNoticeStatus">Thông báo hoàn thành</div></div><button class="btn plain small" onclick="clearFinishedTimers()">Xóa mẻ đã hoàn thành</button></div></div>
+      <div id="activeTimerList"></div>
+    </section>
+
+    <!-- VIEW: ACCOUNTS -->
+    <section class="view" id="v-accounts">
+      <div class="heading">
+        <div><h1>Quản lý tài khoản</h1><div class="muted">Theo dõi từng acc đang sản xuất và acc cần thu hoạch</div></div>
+        <button class="btn primary" onclick="addAccount()">＋ Thêm acc</button>
+      </div>
+      <div id="accountOverview" class="account-overview"></div>
+      <div class="account-toolbar"><div class="account-filter-hint">Chọn một ô phía trên để mở danh sách tài khoản trong cửa sổ.</div><button class="btn soft small" onclick="openRoleManager()">⚙ Quản lý vai trò</button></div>
+      <div id="accountList" class="account-groups"></div>
+    </section>
+
+    <!-- VIEW: SETTINGS -->
+    <section class="view" id="v-settings">
+      <div class="heading"><div><h1>Đồng bộ & Sao lưu</h1><div class="muted">Quản lý tài khoản và dữ liệu</div></div></div>
+      <div class="panel">
+        <h3>📦 Sao lưu dữ liệu Excel</h3>
+        <p class="muted">Bao gồm máy, Food, ảnh, công thức, kế hoạch, checklist, tài khoản Hay Day và bộ đếm thời gian.</p>
+        <div class="row wrap">
+          <button class="btn primary" onclick="exportBackup()">Xuất Excel sao lưu</button>
+          <label class="btn soft filebtn">Nhập Excel sao lưu<input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onchange="importBackup(this.files[0]);this.value=''"></label>
+          <button class="btn soft" onclick="backupCurrentData()">⬇ Sao lưu hiện tại (.json)</button>
+        </div>
+        <div class="muted" style="margin-top:8px">Sao lưu hiện tại tạo một file JSON chứa toàn bộ dữ liệu đang có trên thiết bị, gồm ảnh, tài khoản, kho, Food, máy và kế hoạch.</div>
+        <div id="backupMsg" class="muted" style="margin-top:9px"></div>
+      </div>
+      <div class="panel" id="flexExcelPanel">
+        <h3>📊 Nhập / xuất danh mục Excel</h3>
+        <p class="muted">Nhập nhiều Food, máy sản xuất và tài khoản cùng lúc. File Excel có thể gồm nhiều sheet; dữ liệu trùng tên sẽ được cập nhật, dữ liệu mới sẽ được thêm.</p>
+        <div class="row wrap" style="margin:12px 0">
+          <label class="btn soft filebtn">📥 Nhập danh mục Excel (.xlsx)<input type="file" accept=".xlsx,.xls" onchange="importFlexibleCatalog(this.files[0]);this.value=''"></label>
+          <button class="btn soft" type="button" onclick="downloadFlexibleTemplate()">⬇ Tải file mẫu</button>
+        </div>
+        <div class="muted" id="flexImportMsg" style="margin-bottom:14px">Hỗ trợ các sheet: Food, Máy sản xuất, Tài khoản. Có thể nhập một hoặc nhiều danh mục trong cùng file.</div>
+        <div style="border-top:1px solid var(--line);padding-top:14px">
+          <b style="font-size:14px">Xuất danh sách theo cột tùy chọn</b>
+          <p class="muted" style="margin:4px 0 12px">Chọn danh mục và chỉ giữ lại những cột bạn muốn đưa vào Excel.</p>
+          <div id="flexExportOptions"></div>
+          <div class="row wrap" style="margin-top:12px"><button class="btn primary" type="button" onclick="exportFlexibleCatalog()">📤 Xuất Excel đã chọn</button><button class="btn plain small" type="button" onclick="setFlexibleExportDefaults()">Chọn lại mặc định</button></div>
+          <div class="muted" id="flexExportMsg" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Quản lý dữ liệu</h3>
+        <button class="btn danger" onclick="resetLocal()">Xóa toàn bộ dữ liệu trên thiết bị</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="mobilebar" id="mobileNav"></nav>
+
+<!-- MODALS & POPUPS -->
+
+<!-- Dynamic List Popup -->
+<dialog id="listPopup">
+  <div class="modal">
+    <div class="popup-head">
+      <h2 id="listPopupTitle">Danh sách</h2>
+      <button class="popup-close" onclick="listPopup.close()">×</button>
+    </div>
+    <div id="listPopupContent"></div>
+  </div>
+</dialog>
+
+<!-- Food Dialog -->
+<dialog id="foodDialog">
+  <form class="modal" id="foodForm">
+    <div class="popup-head">
+      <h2 id="foodDialogTitle">Thêm Food</h2>
+      <button type="button" class="popup-close" onclick="foodDialog.close()">×</button>
+    </div>
+    <div class="field"><label>Tên Food *</label><input id="fName" required></div>
+    <div class="field">
+      <label>Ảnh Food</label>
+      <div class="food-image-card">
+        <div class="food-image-preview"><img id="fImagePreview" alt=""></div>
+        <div>
+          <span id="fImageHint" class="muted">Chọn ảnh rõ nét để dễ nhận biết.</span><br><br>
+          <label class="filebtn">📷 Chọn ảnh<input id="fImage" type="file" accept="image/*"></label>
+        </div>
+      </div>
+    </div>
+    <div class="field"><label>Máy sản xuất</label><select id="fMachine"></select></div>
+    <div class="field"><label>Thời gian sản xuất (phút / 1 sản phẩm)</label><input id="fTime" type="number" min="0" step="1" placeholder="Ví dụ: 30"></div>
+    <div class="field"><label>Nguyên liệu cần</label><div id="fIngredients"></div><button type="button" class="btn soft small" onclick="addIngredientRow()" style="margin-top:6px">＋ Thêm nguyên liệu</button></div>
+    <div class="field"><label>Ghi chú</label><textarea id="fNote"></textarea></div>
+    <div class="modalfoot">
+      <button type="button" class="btn plain" onclick="foodDialog.close()">Hủy</button>
+      <button class="btn primary">Lưu Food</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Machine Dialog -->
+<dialog id="machineDialog">
+  <form class="modal" id="machineForm">
+    <div class="popup-head">
+      <h2 id="machineTitle">Thêm máy</h2>
+      <button type="button" class="popup-close" onclick="machineDialog.close()">×</button>
+    </div>
+    <div class="field"><label>Tên máy *</label><input id="mName" required></div>
+    <div class="field"><label>Ảnh máy</label><label class="filebtn">📷 Chọn ảnh<input id="mImage" type="file" accept="image/*"></label></div>
+    <div class="field"><label>Mô tả</label><input id="mNote"></div>
+    <div class="modalfoot">
+      <button type="button" class="btn plain" onclick="machineDialog.close()">Hủy</button>
+      <button class="btn primary">Lưu máy</button>
+    </div>
+  </form>
+</dialog>
+
+
+<!-- Account add / role editor -->
+<dialog id="accountDialog">
+  <form class="modal account-form" id="accountForm">
+    <div class="popup-head">
+      <h2 id="accountDialogTitle">Thêm tài khoản</h2>
+      <button type="button" class="popup-close" onclick="accountDialog.close()" aria-label="Đóng">×</button>
+    </div>
+    <p class="account-form-subtitle" id="accountDialogSubtitle">Đặt tên và chọn nhiệm vụ cho tài khoản Hay Day.</p>
+    <div class="field" id="accountNameField">
+      <label for="accountNameInput">Tên tài khoản</label>
+      <input id="accountNameInput" type="text" maxlength="60" placeholder="Ví dụ: Acc 01" autocomplete="off" required>
+    </div>
+    <div class="field">
+      <label>Vai trò tài khoản</label>
+      <div class="role-picker" id="accountRolePicker"></div>
+    </div>
+    <div class="modalfoot">
+      <button type="button" class="btn plain" onclick="accountDialog.close()">Hủy</button>
+      <button type="submit" class="btn primary" id="accountDialogSubmit">Thêm tài khoản</button>
+    </div>
+  </form>
+</dialog>
+
+
+<dialog id="roleManagerDialog">
+  <form class="modal account-form" id="roleManagerForm">
+    <div class="popup-head">
+      <h2>Quản lý vai trò</h2>
+      <button type="button" class="popup-close" onclick="roleManagerDialog.close()" aria-label="Đóng">×</button>
+    </div>
+    <p class="account-form-subtitle">Đổi tên các nhóm có sẵn hoặc tạo nhóm mới theo cách bạn quản lý acc.</p>
+    <div id="roleManagerList" class="role-manager-list"></div>
+    <div class="field role-add-row">
+      <label for="newRoleName">Thêm vai trò mới</label>
+      <div class="role-add-controls">
+        <input id="newRoleName" maxlength="50" placeholder="Ví dụ: Acc chuyên trồng trọt">
+        <button type="button" class="btn soft" onclick="addCustomAccountRole()">＋ Thêm</button>
+      </div>
+    </div>
+    <div class="modalfoot">
+      <button type="button" class="btn plain" onclick="roleManagerDialog.close()">Đóng</button>
+      <button type="button" class="btn primary" onclick="saveRoleNames()">Lưu tên vai trò</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Recipe / Plan Detail Dialog -->
+<dialog id="recipeDialog"><div class="modal" id="recipeContent"></div></dialog>
+
+<!-- Plan Dialog -->
+<dialog id="planDialog">
+  <form class="modal" id="planForm">
+    <div class="popup-head">
+      <h2>Tạo kế hoạch</h2>
+      <button type="button" class="popup-close" onclick="planDialog.close()">×</button>
+    </div>
+    <div class="field"><label>Tên kế hoạch *</label><input id="pName" required></div>
+    <div class="modalfoot">
+      <button type="button" class="btn plain" onclick="planDialog.close()">Hủy</button>
+      <button class="btn primary">Tạo kế hoạch</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const uid = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+const NAV = [['dashboard','⌂','Tổng quan'],['foods','🍎','Food'],['machines','⚙','Máy'],['calc','🧮','Tính'],['inventory','📦','Kho nguyên liệu'],['auto','🗓','Lịch & phân chia'],['plans','☷','Kế hoạch'],['production','⏱','Đang SX'],['accounts','👥','Tài khoản'],['settings','☁','Sao lưu']];
+
+function defaultData() {
+  const defaultMachineId = uid();
+  return {
+    machines: [
+      { id: defaultMachineId, name: 'Lò nướng bánh', note: 'Sản xuất các loại bánh', image: '' }
+    ],
+    ingredients: [],
+    inventory: [],
+    inventoryHistory: [],
+    schedules: [],
+    foods: [
+      { id: uid(), name: 'Bánh mì', machineId: defaultMachineId, image: '', ingredients: [{ name: 'Lúa mì', qty: 3, image: '' }], productionMinutes: 5, note: 'Thời gian: 5 phút' }
+    ],
+    plans: [],
+    activeTimers: [],
+    accounts: [],
+    updatedAt: new Date().toISOString()
+  };
+}
+
+let db = load(), editingFood = null, editingMachine = null, foodImageData = '', machineImageData = '', calcSelection = {}, activePlan = null, view = 'dashboard';
+let showAllDashboardMachines = false;
+
+function load() { try { const data = JSON.parse(localStorage.getItem('hayday-v1')) || defaultData(); data.activeTimers = Array.isArray(data.activeTimers) ? data.activeTimers : []; data.accounts = Array.isArray(data.accounts) ? data.accounts : []; data.accounts.forEach(a=>{if(!a.role)a.role='food';}); data.plans = Array.isArray(data.plans) ? data.plans : []; data.ingredients = Array.isArray(data.ingredients) ? data.ingredients : []; data.inventory = Array.isArray(data.inventory) ? data.inventory : []; data.inventoryHistory = Array.isArray(data.inventoryHistory) ? data.inventoryHistory : []; data.schedules = Array.isArray(data.schedules) ? data.schedules : []; return data; } catch { return defaultData() } }
+let undoStack = [];
+let lastPersisted = JSON.stringify(db);
+function updateUndoUI(){ const b=$('undoBtn'); if(b){b.disabled=!undoStack.length;b.title=undoStack.length?`Hoàn tác (${undoStack.length} bước)`:'Không có thao tác để hoàn tác';} }
+function save() {
+  db.updatedAt = new Date().toISOString();
+  const next=JSON.stringify(db);
+  if(lastPersisted && next!==lastPersisted){undoStack.push(lastPersisted);if(undoStack.length>10)undoStack.shift();}
+  try {
+    localStorage.setItem('hayday-v1', next);
+    lastPersisted=next;
+    const status=$('syncStatus'); if(status) status.textContent='● Đã lưu trên thiết bị';
+  } catch(err) {
+    const status=$('syncStatus'); if(status) status.textContent='⚠ Bộ nhớ gần đầy';
+    alert('Không thể lưu dữ liệu vào trình duyệt (có thể hết dung lượng). Hãy xuất Excel sao lưu, sau đó giảm/xóa ảnh lớn.\n\n'+err.message);
+  }
+  updateUndoUI(); render();
+}
+function undoLastChange(){
+  if(!undoStack.length)return;
+  if(!confirm('Hoàn tác thao tác gần nhất? Dữ liệu hiện tại sẽ quay về trạng thái trước đó.'))return;
+  try{
+    db=JSON.parse(undoStack.pop());
+    db.updatedAt=new Date().toISOString();
+    const serialized=JSON.stringify(db);localStorage.setItem('hayday-v1',serialized);lastPersisted=serialized;
+    updateUndoUI();render();alert('Đã hoàn tác.');
+  }catch(e){alert('Không thể hoàn tác: '+e.message);}
+}
+function esc(s='') { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+function img(src) { return src || 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="100"><rect width="100%" height="100%" rx="12" fill="#edf4e9"/><text x="50%" y="55%" font-size="35" text-anchor="middle">🍞</text></svg>') }
+function readImage(file, cb) {
+  if(!file)return;
+  if(!file.type.startsWith('image/')){alert('Vui lòng chọn file ảnh.');return;}
+  if(file.size>15*1024*1024){alert('Ảnh quá lớn (trên 15MB). Hãy chọn ảnh nhỏ hơn.');return;}
+  const reader=new FileReader();
+  reader.onerror=()=>alert('Không đọc được ảnh.');
+  reader.onload=()=>{
+    const source=new Image();
+    source.onerror=()=>cb(reader.result);
+    source.onload=()=>{
+      const max=480,scale=Math.min(1,max/Math.max(source.width,source.height));
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+      const ctx=canvas.getContext('2d');ctx.drawImage(source,0,0,canvas.width,canvas.height);
+      // JPEG reduces the footprint of photos; preserve transparency for PNG/WebP icons.
+      const transparent=/png|webp|gif/.test(file.type);
+      const result=canvas.toDataURL(transparent?'image/webp':'image/jpeg',0.78);
+      cb(result.length<reader.result.length?result:reader.result);
+    };
+    source.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function go(v) {
+  view = v;
+  document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'v-' + v));
+  document.querySelectorAll('[data-view]').forEach(x => x.classList.toggle('active', x.dataset.view === v));
+  render();
+}
+
+function navBuild() {
+  $('sideNav').innerHTML = NAV.map(([v,ico,n]) =>
+    `<button data-view="${v}" onclick="go('${v}')"><span>${ico}</span> ${n}</button>`
+  ).join('');
+
+  // Keep the five most-used destinations visible on small screens.
+  const mobileItems = [
+    ['dashboard','⌂','Trang chủ'],
+    ['foods','🍎','Kho'],
+    ['calc','🧮','Tính'],
+    ['production','⏱','Theo dõi']
+  ];
+  $('mobileNav').innerHTML = mobileItems.map(([v,ico,n]) =>
+    `<button data-view="${v}" onclick="go('${v}')"><span>${ico}</span>${n}</button>`
+  ).join('') + `<button type="button" onclick="openMoreNav()"><span>☰</span>Khác</button>`;
+}
+function openMoreNav() {
+  const items = [
+    ['inventory','📦','Kho nguyên liệu','Tồn kho, nhập xuất và cảnh báo'],
+    ['auto','🗓','Lịch & phân chia','Tự động phân công sản phẩm cho máy và acc'],
+    ['machines','⚙','Máy sản xuất','Quản lý máy và phân loại Food'],
+    ['plans','☷','Kế hoạch','Xem tiến độ và checklist'],
+    ['accounts','👥','Tài khoản','Theo dõi từng acc Hay Day'],
+    ['settings','☁','Sao lưu','Nhập, xuất và quản lý dữ liệu']
+  ];
+  $('listPopupTitle').textContent = 'Chức năng khác';
+  $('listPopupContent').innerHTML = `<div style="display:grid;gap:8px">
+    ${items.map(([v,ico,n,d]) => `<button class="btn plain" style="display:flex;align-items:center;gap:12px;text-align:left;padding:12px" onclick="listPopup.close();go('${v}')">
+      <span style="font-size:20px;width:28px;text-align:center">${ico}</span>
+      <span><b style="display:block">${n}</b><small class="muted">${d}</small></span>
+      <span style="margin-left:auto">›</span>
+    </button>`).join('')}
+  </div>`;
+  $('listPopup').showModal();
+}
+
+function render() {
+  renderDashboard();
+  renderFoods();
+  renderMachines();
+  renderCalc();
+  renderInventory();
+  renderAutoPlanner();
+  renderPlans();
+  renderProduction();
+  renderAccounts();
+  fillMachineSelects();
+}
+
+/* DASHBOARD & POPUP INTERACTIONS */
+function renderDashboard() {
+  const ingCount = new Set(db.foods.flatMap(f => (f.ingredients || []).map(i => i.name.toLowerCase()))).size;
+
+  $('stats').innerHTML = [
+    [db.foods.length, 'Tổng Food', 'openFoodsPopup()'],
+    [db.machines.length, 'Máy sản xuất', 'openMachinesPopup()'],
+    [ingCount, 'Loại nguyên liệu', 'openIngredientsPopup()'],
+    [db.plans.length, 'Kế hoạch', "go('plans')"]
+  ].map(([n, t, action]) => `
+    <div class="stat" onclick="${action}">
+      <b>${n}</b>
+      <span>${t} ↗</span>
+    </div>
+  `).join('');
+
+  const machineTotal = db.machines.length;
+  const visibleMachines = showAllDashboardMachines ? db.machines : db.machines.slice(0, 4);
+  $('machineStatsCount').textContent = machineTotal ? `${Math.min(visibleMachines.length, machineTotal)}/${machineTotal} máy` : '';
+  $('machineStats').innerHTML = machineTotal ? visibleMachines.map(m => {
+    const fCount = db.foods.filter(f => f.machineId === m.id).length;
+    return `
+      <div class="machine machine-clickable" onclick="openMachineFoodsPopup('${m.id}')">
+        <img src="${img(m.image)}">
+        <h3>${esc(m.name)}</h3>
+        <span class="muted">${fCount} Food ↗</span>
+      </div>`;
+  }).join('') : '<div class="empty">Chưa có máy sản xuất nào.</div>';
+
+  const moreWrap = $('machineStatsMore');
+  const toggle = $('machineStatsToggle');
+  if (moreWrap && toggle) {
+    moreWrap.style.display = machineTotal > 4 ? 'block' : 'none';
+    toggle.textContent = showAllDashboardMachines ? 'Thu gọn ↑' : `Xem thêm ${machineTotal - 4} máy ↓`;
+  }
+
+  $('recentPlans').innerHTML = db.plans.length ? db.plans.slice().sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0,4).map(planSummary).join('') : '<div class="empty">Chưa có kế hoạch nào.</div>';
+}
+
+
+function toggleDashboardMachines() {
+  showAllDashboardMachines = !showAllDashboardMachines;
+  renderDashboard();
+}
+
+
+/* POPUP HANDLERS */
+function openMachinesPopup() {
+  $('listPopupTitle').textContent = 'Danh sách Máy sản xuất (' + db.machines.length + ')';
+  $('listPopupContent').innerHTML = db.machines.length ? `
+    <div class="machine-grid">
+      ${db.machines.map(m => `
+        <div class="machine machine-clickable" onclick="listPopup.close(); openMachineFoodsPopup('${m.id}')">
+          <img src="${img(m.image)}">
+          <h3>${esc(m.name)}</h3>
+          <span class="muted">${db.foods.filter(f=>f.machineId===m.id).length} món ↗</span>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn primary small" onclick="listPopup.close();openMachine()">＋ Thêm máy mới</button>
+    </div>
+  ` : '<div class="empty">Chưa có máy sản xuất nào.</div>';
+  $('listPopup').showModal();
+}
+
+function openFoodsPopup() {
+  $('listPopupTitle').textContent = 'Tất cả Food (' + db.foods.length + ')';
+  $('listPopupContent').innerHTML = db.foods.length ? `
+    <div class="grid">
+      ${db.foods.map(f => `
+        <div class="food" onclick="listPopup.close(); showRecipe('${f.id}')">
+          <img src="${img(f.image)}">
+          <h3>${esc(f.name)}</h3>
+          <small>${esc(db.machines.find(m=>m.id===f.machineId)?.name||'Chưa phân loại')}</small>
+        </div>
+      `).join('')}
+    </div>
+  ` : '<div class="empty">Chưa có Food nào.</div>';
+  $('listPopup').showModal();
+}
+
+// Bấm vùng nền/backdrop bên ngoài nội dung popup để đóng hộp thoại.
+function enableBackdropClose(dialog){
+  if(!dialog)return;
+  dialog.addEventListener('click',event=>{
+    const panel=dialog.querySelector('.modal');
+    if(!panel)return;
+    const rect=panel.getBoundingClientRect();
+    const outside=event.clientX<rect.left||event.clientX>rect.right||
+                  event.clientY<rect.top||event.clientY>rect.bottom;
+    if(outside)dialog.close();
+  });
+}
+['listPopup','foodDialog','machineDialog','accountDialog','roleManagerDialog',
+ 'recipeDialog','planDialog'].forEach(id=>enableBackdropClose($(id)));
+
+function openMachineFoodsPopup(machineId) {
+  const m = db.machines.find(x => x.id === machineId);
+  const foods = db.foods.filter(f => f.machineId === machineId);
+  $('listPopupTitle').textContent = m ? `Máy: ${m.name}` : 'Danh sách Food';
+
+  $('listPopupContent').innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin:0 0 14px;gap:8px">
+      <button type="button" class="btn primary" onclick="addFoodFromMachine('${machineId}')">＋ Thêm Food</button>
+    </div>
+    ${foods.length ? `
+      <div class="grid">
+        ${foods.map(f => `
+          <div class="food" onclick="listPopup.close(); showRecipe('${f.id}')">
+            <img src="${img(f.image)}">
+            <h3>${esc(f.name)}</h3>
+            <small>${(f.ingredients||[]).length} nguyên liệu</small>
+          </div>
+        `).join('')}
+      </div>
+    ` : '<div class="empty">Máy này chưa có sản phẩm nào. Bấm “＋ Thêm Food” để tạo Food cho máy này.</div>'}
+  `;
+  $('listPopup').showModal();
+}
+
+function addFoodFromMachine(machineId) {
+  listPopup.close();
+  openFood();
+  $('fMachine').value = machineId;
+}
+
+function openIngredientsPopup() {
+  let ingMap = new Map();
+  (db.ingredients || []).forEach(i => {
+    if (i?.name) ingMap.set(i.name.trim().toLowerCase(), { name: i.name, image: i.image || '' });
+  });
+  db.foods.forEach(f => {
+    (f.ingredients || []).forEach(i => {
+      let key = i.name.trim().toLowerCase();
+      if (!ingMap.has(key)) ingMap.set(key, { name: i.name, image: i.image || '' });
+      else if (!ingMap.get(key).image && i.image) ingMap.get(key).image = i.image;
+    });
+  });
+  const ings = [...ingMap.values()];
+
+  $('listPopupTitle').textContent = 'Danh sách Nguyên liệu (' + ings.length + ')';
+  $('listPopupContent').innerHTML = ings.length ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:10px;">
+      ${ings.map(i => `
+        <div style="padding:10px;border:1px solid var(--line);border-radius:12px;text-align:center;background:#fafbf8;">
+          <img src="${img(i.image)}" style="width:40px;height:40px;object-fit:contain"><br>
+          <span style="font-size:12px;font-weight:700;color:#334233">${esc(i.name)}</span>
+        </div>
+      `).join('')}
+    </div>
+  ` : '<div class="empty">Chưa có dữ liệu nguyên liệu.</div>';
+  $('listPopup').showModal();
+}
+
+/* FOODS & MACHINES RENDERING */
+function fillMachineSelects(){
+  const machineOptions = db.machines.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  ['foodMachine','fMachine'].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    const prev = el.value;
+    el.innerHTML = (id === 'foodMachine' ? '<option value="">Tất cả máy</option>' : '<option value="">Chưa phân loại</option>') + machineOptions;
+    el.value = db.machines.some(m => m.id === prev) ? prev : '';
+  });
+}
+
+function renderFoods() {
+  let q = ($('foodSearch')?.value || '').toLowerCase(), mid = $('foodMachine')?.value || '';
+  let a = db.foods.filter(f => f.name.toLowerCase().includes(q) && (!mid || f.machineId === mid));
+  $('foodCount').textContent = `${a.length} / ${db.foods.length} Food`;
+  $('foodGrid').innerHTML = a.length ? a.map(f => `
+    <div class="food" onclick="showRecipe('${f.id}')">
+      <img src="${img(f.image)}">
+      <h3>${esc(f.name)}</h3>
+      <small>${esc(db.machines.find(m=>m.id===f.machineId)?.name||'Chưa phân loại')} · ${(f.ingredients||[]).length} nguyên liệu</small>
+    </div>`).join('') : '<div class="empty">Chưa có Food phù hợp.</div>';
+}
+
+function renderMachines() {
+  $('machineGrid').innerHTML = db.machines.length ? db.machines.map(m => `
+    <div class="machine machine-clickable" role="button" tabindex="0"
+         title="Bấm để xem Food của máy này"
+         onclick="openMachineFoodsPopup('${m.id}')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMachineFoodsPopup('${m.id}')}">
+      <img src="${img(m.image)}">
+      <h3>${esc(m.name)}</h3>
+      <div class="muted">${db.foods.filter(f=>f.machineId===m.id).length} Food · Bấm để xem</div>
+      <p class="muted" style="margin:5px 0 10px">${esc(m.note||'')}</p>
+      <div class="row wrap">
+        <button class="btn soft small" onclick="event.stopPropagation();openMachine('${m.id}')">Sửa</button>
+        <button class="btn danger small" onclick="event.stopPropagation();deleteMachine('${m.id}')">Xóa</button>
+      </div>
+    </div>`).join('') : '<div class="empty">Chưa có máy. Bấm “Thêm máy” để bắt đầu.</div>';
+}
+
+function getFoodIngredientCatalog(){
+  const map=new Map();
+  (db.ingredients||[]).forEach(item=>{
+    const name=typeof item==='string'?item:(item?.name||'');
+    if(!name.trim())return;
+    const key=name.trim().toLocaleLowerCase('vi');
+    map.set(key,{name:name.trim(),image:typeof item==='object'?(item.image||''):''});
+  });
+  (db.foods||[]).forEach(food=>(food.ingredients||[]).forEach(item=>{
+    if(!item?.name||!item.name.trim())return;
+    const key=item.name.trim().toLocaleLowerCase('vi');
+    if(!map.has(key))map.set(key,{name:item.name.trim(),image:item.image||''});
+    else if(!map.get(key).image&&item.image)map.get(key).image=item.image;
+  }));
+  return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+}
+
+function addIngredientRow(data={}){
+  const catalog=getFoodIngredientCatalog();
+  const d=document.createElement('div');
+  d.className='ingrow';
+  const selectedName=(data.name||'').trim();
+  const known=catalog.some(x=>x.name.toLocaleLowerCase('vi')===selectedName.toLocaleLowerCase('vi'));
+  d.innerHTML=`
+    <img class="ing-preview" alt="Ảnh nguyên liệu">
+    <select class="ing-catalog" aria-label="Chọn nguyên liệu từ danh mục">
+      <option value="">— Chọn nguyên liệu có sẵn —</option>
+      ${catalog.map(item=>`<option value="${esc(item.name)}">${esc(item.name)}</option>`).join('')}
+      <option value="__custom__">＋ Nguyên liệu khác / nhập mới</option>
+    </select>
+    <input class="ing-name" placeholder="Tên nguyên liệu" value="${esc(data.name||'')}" aria-label="Tên nguyên liệu">
+    <input class="ing-qty" type="number" min="0" step="any" placeholder="SL" value="${data.qty??1}" aria-label="Số lượng">
+    <label class="filebtn" title="Chọn ảnh">📷 Ảnh<input class="ing-image" type="file" accept="image/*"></label>
+    <button type="button" class="btn danger small" aria-label="Xóa nguyên liệu" onclick="this.parentElement.remove()">×</button>`;
+  const preview=d.querySelector('.ing-preview');
+  const nameInput=d.querySelector('.ing-name');
+  const selector=d.querySelector('.ing-catalog');
+  preview.src=img(data.image||'');
+  d.dataset.image=data.image||'';
+  if(known)selector.value=catalog.find(x=>x.name.toLocaleLowerCase('vi')===selectedName.toLocaleLowerCase('vi')).name;
+  else if(selectedName)selector.value='__custom__';
+
+  selector.addEventListener('change',()=>{
+    const value=selector.value;
+    if(value==='__custom__'){
+      nameInput.value='';
+      nameInput.focus();
+      d.dataset.image='';
+      preview.src=img('');
+      return;
+    }
+    const item=catalog.find(x=>x.name===value);
+    nameInput.value=item?.name||'';
+    d.dataset.image=item?.image||'';
+    preview.src=img(item?.image||'');
+  });
+  nameInput.addEventListener('input',()=>{
+    const item=catalog.find(x=>x.name.toLocaleLowerCase('vi')===nameInput.value.trim().toLocaleLowerCase('vi'));
+    if(item){d.dataset.image=item.image||'';preview.src=img(item.image||'');}
+    else if(selector.value!=='__custom__'){d.dataset.image='';preview.src=img('');}
+  });
+  d.querySelector('.ing-image').addEventListener('change',e=>{
+    readImage(e.target.files[0],src=>{d.dataset.image=src;preview.src=src;});
+  });
+  $('fIngredients').appendChild(d);
+}
+
+function openFood(id) {
+  editingFood = id || null;
+  let f = db.foods.find(x => x.id === id);
+  $('foodDialogTitle').textContent = f ? 'Sửa Food' : 'Thêm Food';
+  $('fName').value = f?.name || '';
+  $('fNote').value = f?.note || '';
+  $('fTime').value = f?.productionMinutes ?? '';
+  $('fMachine').value = f?.machineId || '';
+  $('fIngredients').innerHTML = '';
+  (f?.ingredients || []).forEach(addIngredientRow);
+  if (!f) addIngredientRow();
+  foodImageData = f?.image || '';
+  $('fImagePreview').src = img(f?.image || '');
+  $('foodDialog').showModal();
+}
+
+$('fImage').addEventListener('change', e => readImage(e.target.files[0], x => { foodImageData = x; $('fImagePreview').src = x; }));
+$('foodForm').addEventListener('submit', e => {
+  e.preventDefault();
+  let ingredients = [...$('fIngredients').querySelectorAll('.ingrow')].map(r => ({
+    name: r.querySelector('.ing-name').value.trim(),
+    qty: Number(r.querySelector('.ing-qty').value) || 0,
+    image: r.dataset.image || ''
+  })).filter(x => x.name);
+  
+  const cleanFoodName=$('fName').value.trim();
+  if(db.foods.some(x=>x.id!==editingFood&&x.name.trim().toLocaleLowerCase('vi')===cleanFoodName.toLocaleLowerCase('vi'))){alert('Đã có Food trùng tên. Hãy đổi tên hoặc chỉnh sửa Food hiện có.');return;}
+  let f = { id: editingFood || uid(), name: cleanFoodName, machineId: $('fMachine').value, image: foodImageData, ingredients, productionMinutes: Math.max(0, Number($('fTime').value)||0), note: $('fNote').value.trim(), updatedAt: new Date().toISOString() };
+  if (editingFood) db.foods = db.foods.map(x => x.id === editingFood ? f : x);
+  else db.foods.push(f);
+  $('foodDialog').close();
+  save();
+});
+
+function showRecipe(id) {
+  let f = db.foods.find(x => x.id === id);
+  if (!f) return;
+  let machine = db.machines.find(m => m.id === f.machineId)?.name || 'Chưa phân loại';
+  let ingredients = f.ingredients || [];
+  $('recipeContent').innerHTML = `
+    <div class="recipe-shell">
+      <div class="recipe-head">
+        <h2 class="recipe-title">${esc(f.name)}</h2>
+        <button class="popup-close" onclick="recipeDialog.close()">×</button>
+      </div>
+      <div class="recipe-hero">
+        <img class="recipe-food-photo" src="${img(f.image)}" alt="">
+        <div class="recipe-meta">
+          <span class="recipe-machine">⚙ ${esc(machine)}</span>
+          ${f.productionMinutes ? `<div class="recipe-note">⏱ ${formatDuration(f.productionMinutes)} / sản phẩm</div>` : ''}
+          ${f.note ? `<div class="recipe-note">${esc(f.note)}</div>` : ''}
+        </div>
+      </div>
+      <section class="recipe-section">
+        <h3 class="recipe-section-title"><span>🥕 Nguyên liệu cần</span><span class="recipe-count">${ingredients.length} loại</span></h3>
+        <div class="recipe-ingredients">
+          ${ingredients.map(i => `
+            <div class="recipe-ingredient">
+              <img class="recipe-ingredient-photo" src="${img(i.image)}">
+              <span class="recipe-ingredient-name">${esc(i.name)}</span>
+              <span class="recipe-qty">× ${i.qty}</span>
+            </div>`).join('') || '<div class="empty">Chưa có nguyên liệu.</div>'}
+        </div>
+      </section>
+      <div class="recipe-footer" style="justify-content:space-between;flex-wrap:wrap">
+        <button class="btn soft" onclick="startFoodTimer('${id}')">▶ Bắt đầu đếm ngược</button>
+        <div class="row"><button class="btn danger" onclick="deleteFood('${id}')">Xóa</button><button class="btn primary" onclick="recipeDialog.close();openFood('${id}')">Chỉnh sửa</button></div>
+      </div>
+    </div>`;
+  $('recipeDialog').showModal();
+}
+
+function deleteFood(id) {
+  const food=db.foods.find(f=>f.id===id);if(!food)return;
+  const linkedPlans=db.plans.filter(p=>(p.items||[]).some(it=>it.foodId===id)).length;
+  const linkedTimers=(db.activeTimers||[]).filter(t=>t.foodId===id&&t.status==='running').length;
+  const warning=`Xóa Food “${food.name}”?\n${linkedPlans?`• Đang nằm trong ${linkedPlans} kế hoạch. Các mục kế hoạch sẽ không còn tìm thấy Food này.\n`:''}${linkedTimers?`• Có ${linkedTimers} timer đang chạy (timer sẽ được giữ lại).\n`:''}Thao tác này có thể hoàn tác bằng Undo.`;
+  if (!confirm(warning)) return;
+  db.foods = db.foods.filter(f => f.id !== id);
+  save();
+  recipeDialog.close();
+}
+
+function openMachine(id) {
+  editingMachine = id || null;
+  let m = db.machines.find(x => x.id === id);
+  $('machineTitle').textContent = m ? 'Sửa máy' : 'Thêm máy';
+  $('mName').value = m?.name || '';
+  $('mNote').value = m?.note || '';
+  machineImageData = m?.image || '';
+  $('machineDialog').showModal();
+}
+$('mImage').addEventListener('change', e => readImage(e.target.files[0], x => machineImageData = x));
+$('machineForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const cleanMachineName=$('mName').value.trim();
+  if(db.machines.some(x=>x.id!==editingMachine&&x.name.trim().toLocaleLowerCase('vi')===cleanMachineName.toLocaleLowerCase('vi'))){alert('Đã có máy trùng tên. Hãy đổi tên hoặc chỉnh sửa máy hiện có.');return;}
+  let m = { id: editingMachine || uid(), name: cleanMachineName, note: $('mNote').value.trim(), image: machineImageData };
+  if (editingMachine) db.machines = db.machines.map(x => x.id === editingMachine ? m : x);
+  else db.machines.push(m);
+  machineDialog.close();
+  save();
+});
+
+function deleteMachine(id) {
+  const machine=db.machines.find(m=>m.id===id);if(!machine)return;
+  const linked=db.foods.filter(f=>f.machineId===id);
+  if (!confirm(`Xóa máy “${machine.name}”?\n${linked.length} Food đang gắn với máy này sẽ chuyển thành “Chưa phân loại”.\nBạn có thể Undo để khôi phục.`)) return;
+  db.foods.forEach(f => { if (f.machineId === id) f.machineId = ''; });
+  db.machines = db.machines.filter(m => m.id !== id);
+  save();
+}
+
+/* PRODUCTION PLANNING HELPERS */
+function formatDuration(minutes) {
+  minutes = Math.max(0, Number(minutes)||0);
+  if (minutes < 60) return `${minutes} phút`;
+  const h = Math.floor(minutes/60), m = minutes%60;
+  return m ? `${h} giờ ${m} phút` : `${h} giờ`;
+}
+function planProgress(p) {
+  const total = (p.items||[]).reduce((n,it)=>n+Math.max(0,Number(it.qty)||0),0);
+  const done = (p.items||[]).reduce((n,it)=>n+Math.min(Math.max(0,Number(it.qty)||0),Math.max(0,Number((p.checks||{})[it.foodId])||0)),0);
+  return {total,done,percent:total?Math.round(done/total*100):0};
+}
+function machineWorkload(items) {
+  const groups = new Map();
+  items.forEach(it=>{
+    const f=db.foods.find(x=>x.id===it.foodId); if(!f) return;
+    const m=db.machines.find(x=>x.id===f.machineId);
+    const key=f.machineId||'none';
+    if(!groups.has(key)) groups.set(key,{name:m?.name||'Chưa phân loại',jobs:[]});
+    const duration=Math.max(0,Number(f.productionMinutes)||0);
+    for(let n=0;n<Math.max(0,Number(it.qty)||0);n++) groups.get(key).jobs.push(duration);
+  });
+  return [...groups.values()].map(g=>{
+    const slots=[0,0,0,0,0];
+    g.jobs.sort((a,b)=>b-a).forEach(t=>{let ix=slots.indexOf(Math.min(...slots));slots[ix]+=t;});
+    return {name:g.name,count:g.jobs.length,minutes:Math.max(...slots),slots};
+  });
+}
+
+/* CALCULATOR & PLANS */
+function renderCalc() {
+  let q = ($('calcSearch')?.value || '').toLowerCase();
+  let a = db.foods.filter(f => f.name.toLowerCase().includes(q));
+  $('calcFoodList').innerHTML = a.length ? a.map(f => `
+    <div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)">
+      <div class="row">
+        <img src="${img(f.image)}" style="width:40px;height:40px;object-fit:contain;border-radius:8px">
+        <div><b>${esc(f.name)}</b><div class="muted">${esc(db.machines.find(m=>m.id===f.machineId)?.name||'Chưa phân loại')}</div></div>
+      </div>
+      <input class="search" style="width:70px" type="number" min="0" value="${calcSelection[f.id]||0}" onchange="calcSelection['${f.id}']=Math.max(0,Math.floor(Number(this.value)||0));renderCalcTotals()">
+    </div>
+  `).join('') : '<div class="empty">Chưa có Food.</div>';
+  renderCalcTotals();
+}
+
+function totalsFromItems(items) {
+  let map = new Map();
+  items.forEach(({foodId, qty}) => {
+    let f = db.foods.find(x => x.id === foodId);
+    if (!f) return;
+    (f.ingredients || []).forEach(i => {
+      let k = i.name.trim().toLowerCase();
+      if (!map.has(k)) map.set(k, { name: i.name, qty: 0, image: i.image || '' });
+      map.get(k).qty += Number(i.qty || 0) * qty;
+    });
+  });
+  return [...map.values()];
+}
+
+function renderCalcTotals() {
+  let items = Object.entries(calcSelection).filter(([,q]) => q > 0).map(([foodId, qty]) => ({foodId, qty}));
+  let t = totalsFromItems(items);
+  $('calcTotals').innerHTML = t.length ? t.map(x => `
+    <div class="row between" style="padding:7px 0;border-bottom:1px solid var(--line)">
+      <div class="row"><img src="${img(x.image)}" style="width:34px;height:34px;object-fit:contain"><span>${esc(x.name)}</span></div>
+      <b>${x.qty}</b>
+    </div>
+  `).join('') : '<div class="muted">Chọn số lượng Food để xem tổng nguyên liệu.</div>';
+}
+
+function savePlanFromCalc() {
+  let items = Object.entries(calcSelection).filter(([,q]) => q > 0).map(([foodId, qty]) => ({foodId, qty: Number(qty)}));
+  if (!items.length) { alert('Hãy chọn ít nhất 1 món.'); return; }
+  let name = prompt('Tên kế hoạch:', `Kế hoạch ${new Date().toLocaleDateString('vi-VN')}`);
+  if (!name) return;
+  db.plans.push({ id: uid(), name, items, checks: {}, createdAt: new Date().toISOString() });
+  calcSelection = {};
+  save();
+  go('plans');
+}
+
+function newPlan() { $('pName').value = ''; $('planDialog').showModal(); }
+$('planForm').addEventListener('submit', e => {
+  e.preventDefault();
+  db.plans.push({ id: uid(), name: $('pName').value.trim(), items: [], checks: {}, createdAt: new Date().toISOString() });
+  planDialog.close();
+  save();
+  go('plans');
+});
+
+function planSummary(p) {
+  let ts = totalsFromItems(p.items||[]), pr=planProgress(p);
+  return `
+    <div style="padding:10px 0">
+      <div class="row between wrap"><div><b>${esc(p.name)}</b><div class="muted">${pr.done}/${pr.total} sản phẩm · ${ts.length} loại nguyên liệu</div></div>
+      <button class="btn soft small" onclick="openPlan('${p.id}')">Mở kế hoạch ↗</button></div>
+      <div class="plan-progress"><span style="width:${pr.percent}%"></span></div>
+      <div class="muted">Hoàn thành ${pr.percent}%</div>
+    </div>`;
+}
+
+function renderPlans() {
+  $('planList').innerHTML = db.plans.length ? db.plans.map(p => `<div class="panel">${planSummary(p)}</div>`).join('') : '<div class="empty">Chưa có kế hoạch nào.</div>';
+}
+
+function openPlan(id) {
+  let p = db.plans.find(x => x.id === id);
+  if (!p) return;
+  p.items=p.items||[]; p.checks=p.checks||{};
+  const ts=totalsFromItems(p.items), pr=planProgress(p), workloads=machineWorkload(p.items);
+  const itemRows=p.items.map(it=>{
+    const f=db.foods.find(x=>x.id===it.foodId); if(!f) return '';
+    const qty=Math.max(0,Number(it.qty)||0), done=Math.min(qty,Math.max(0,Number(p.checks[it.foodId])||0));
+    return `<div class="plan-item">
+      <div class="row"><img src="${img(f.image)}" style="width:42px;height:42px;object-fit:contain"><div><b>${esc(f.name)}</b><div class="muted">${esc(db.machines.find(m=>m.id===f.machineId)?.name||'Chưa phân loại')} · ${f.productionMinutes?formatDuration(f.productionMinutes)+'/ món':'Chưa nhập thời gian'}</div></div></div>
+      <input class="plan-qty-input" type="number" min="0" step="1" value="${qty}" aria-label="Số lượng kế hoạch" onchange="updatePlanQty('${p.id}','${f.id}',this.value)">
+      <b>${done}/${qty}</b>
+      <div class="qty-control"><button onclick="changePlanDone('${p.id}','${f.id}',-1)">−</button><button onclick="changePlanDone('${p.id}','${f.id}',1)">＋</button></div>
+      <button class="btn soft small" style="grid-column:1/-1;justify-self:end" onclick="startFoodTimer('${f.id}','${p.id}')">▶ Chạy tối đa 5 ô</button>
+    </div>`;
+  }).join('');
+  $('recipeContent').innerHTML = `<div class="recipe-shell" style="padding:20px">
+    <div class="popup-head"><div><h2>${esc(p.name)}</h2><div class="muted">Tiến độ sản xuất: ${pr.done}/${pr.total} sản phẩm (${pr.percent}%)</div></div><button class="popup-close" onclick="recipeDialog.close()">×</button></div>
+    <div class="plan-progress"><span style="width:${pr.percent}%"></span></div>
+    <h4>🏭 Danh sách sản phẩm cần làm</h4>
+    ${itemRows||'<div class="empty">Kế hoạch chưa có sản phẩm.</div>'}
+    <h4 style="margin-top:18px">⚙️ Khối lượng theo máy (5 ô/máy)</h4>
+    ${workloads.map(w=>`<div class="plan-machine"><div class="row between"><b>${esc(w.name)}</b><b>${w.count} sản phẩm</b></div><div class="muted">Ước tính theo hàng chờ 5 ô: mỗi sản phẩm làm nối tiếp nhau, tổng thời gian phụ thuộc số lượng và thời gian từng món</div></div>`).join('')||'<div class="muted">Chưa có dữ liệu máy.</div>'}
+    <h4 style="margin-top:18px">🥕 Tổng nguyên liệu cần chuẩn bị</h4>
+    ${ts.map(t=>`<div class="row between" style="padding:5px 0"><div class="row"><img src="${img(t.image)}" style="width:30px;height:30px"><span>${esc(t.name)}</span></div><b>${t.qty}</b></div>`).join('')||'<div class="muted">Chưa có nguyên liệu.</div>'}
+    <div class="recipe-footer" style="padding:12px 0 0"><button class="btn danger" onclick="deletePlan('${p.id}')">Xóa kế hoạch</button><button class="btn primary" onclick="recipeDialog.close();go('calc')">Tạo kế hoạch khác</button></div>
+  </div>`;
+  $('recipeDialog').showModal();
+}
+function updatePlanQty(pid, foodId, value) {
+  const p=db.plans.find(x=>x.id===pid); if(!p) return;
+  const it=p.items.find(x=>x.foodId===foodId); if(!it) return;
+  it.qty=Math.max(0,Math.floor(Number(value)||0));
+  p.checks=p.checks||{};
+  p.checks[foodId]=Math.min(it.qty,Math.max(0,Number(p.checks[foodId])||0));
+  save(); openPlan(pid);
+}
+function changePlanDone(pid, foodId, delta) {
+  const p=db.plans.find(x=>x.id===pid); if(!p) return;
+  const it=p.items.find(x=>x.foodId===foodId); if(!it) return;
+  p.checks=p.checks||{};
+  p.checks[foodId]=Math.max(0,Math.min(Number(it.qty)||0,(Number(p.checks[foodId])||0)+delta));
+  save(); openPlan(pid);
+}
+
+function deletePlan(pid) {
+  if (!confirm('Xóa kế hoạch này?')) return;
+  db.plans = db.plans.filter(p => p.id !== pid);
+  save();
+  recipeDialog.close();
+}
+
+/* PRODUCTION COUNTDOWN TIMERS */
+function timerRemaining(timer) { return Math.max(0, Number(timer.endsAt) - Date.now()); }
+function formatClock(ms) { const total=Math.ceil(Math.max(0,ms)/1000), h=Math.floor(total/3600), m=Math.floor((total%3600)/60), sec=total%60; return [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':'); }
+function requestTimerNotifications() {
+  if (!('Notification' in window)) { alert('Trình duyệt này chưa hỗ trợ thông báo. Bạn vẫn xem được đếm ngược khi mở ứng dụng.'); return; }
+  Notification.requestPermission().then(permission=>{ renderProduction(); alert(permission==='granted'?'Đã bật thông báo hoàn thành Food.':'Thông báo chưa được cấp quyền. Hãy cho phép trong cài đặt trình duyệt.'); });
+}
+function startFoodTimer(foodId, planId=null) {
+  const f=db.foods.find(x=>x.id===foodId); if(!f) return;
+  const minutes=Math.max(0,Number(f.productionMinutes)||0);
+  if(!minutes){alert('Food này chưa có thời gian sản xuất. Hãy chỉnh sửa Food và nhập thời gian (phút).');return;}
+  db.accounts=db.accounts||[];
+  if(!db.accounts.length) {
+    alert('Bạn cần thêm ít nhất một tài khoản trước khi bắt đầu sản xuất. Hãy vào mục Tài khoản → Thêm acc.');
+    go('accounts'); return;
+  }
+  const foodAccounts=db.accounts.filter(a=>(a.role||'food')==='food');
+  if(!foodAccounts.length){alert('Chưa có acc sản xuất Food. Hãy thêm acc và chọn vai trò “Sản xuất Food”.');go('accounts');return;}
+  const accountChoices=foodAccounts.map((a,i)=>`${i+1}. ${a.name}`).join('\n');
+  const choice=prompt(`Chọn acc SẢN XUẤT FOOD cho ${f.name}:\n${accountChoices}\n\nAcc kho và acc sản xuất nguyên liệu không xuất hiện ở đây.\nNhập số thứ tự tài khoản:`);
+  if(choice===null) return;
+  const account=foodAccounts[Number(choice)-1];
+  if(!account){alert('Số tài khoản không hợp lệ.');return;}
+  let batchQty=1;
+  if(planId) {
+    const p=db.plans.find(x=>x.id===planId),it=p?.items?.find(x=>x.foodId===foodId);
+    if(it) {
+      const done=Math.max(0,Number(p.checks?.[foodId])||0);
+      const remaining=Math.max(0,(Number(it.qty)||0)-done);
+      if(!remaining){alert('Món này đã hoàn thành đủ số lượng trong kế hoạch.');return;}
+      batchQty=Math.min(5,remaining);
+    }
+  }
+  ensureInventoryCatalog();
+  const required=(f.ingredients||[]).map(i=>({name:i.name,qty:Number(i.qty||0)*batchQty}));
+  const missing=required.map(r=>{const st=findInventory(r.name,account.id);return { ...r, have:Number(st?.qty||0), item:st};}).filter(r=>r.have<r.qty);
+  if(missing.length){alert(`Kho ${account.name} không đủ nguyên liệu để bắt đầu mẻ này:\n`+missing.map(x=>`${x.name}: cần ${x.qty}, còn ${x.have}`).join('\n')+'\nHãy nhập/chuyển nguyên liệu vào đúng acc hoặc giảm số lượng sản xuất.');go('inventory');return;}
+  required.forEach(r=>{const st=findInventory(r.name,account.id);if(st)st.qty=Math.max(0,Number(st.qty||0)-r.qty);});
+  const now=Date.now(),durationMs=minutes*60000;
+  db.activeTimers=db.activeTimers||[];
+  db.activeTimers.push({
+    id:uid(),foodId:f.id,foodName:f.name,image:f.image||'',
+    machineName:db.machines.find(m=>m.id===f.machineId)?.name||'Chưa phân loại',
+    accountId:account.id,accountName:account.name,
+    durationMinutes:minutes,batchQty,completedQty:0,startedAt:now,
+    nextItemAt:now+durationMs,endsAt:now+durationMs*batchQty,
+    status:'running',notified:false,planId:planId||null
+  });
+  save();
+  if('Notification' in window && Notification.permission==='default') Notification.requestPermission().then(()=>renderProduction());
+  if(typeof recipeDialog!=='undefined' && recipeDialog.open) recipeDialog.close();
+  go('production');
+}
+function syncTimerProgress(t) {
+  if(t.status!=='running') return;
+  // Older saved timers represented a single product; keep them compatible.
+  t.batchQty=Math.max(1,Math.floor(Number(t.batchQty)||1));
+  t.durationMinutes=Math.max(1,Number(t.durationMinutes)||1);
+  t.completedQty=Math.min(t.batchQty,Math.max(0,Math.floor(Number(t.completedQty)||0)));
+  let startedAt=Number(t.startedAt);
+  if(!Number.isFinite(startedAt)||startedAt<=0){startedAt=Date.now();t.startedAt=startedAt;}
+  const durationMs=t.durationMinutes*60000;
+  const elapsed=Math.max(0,Date.now()-startedAt);
+  const actualCompleted=Math.min(t.batchQty,Math.floor(elapsed/durationMs));
+  const newlyCompleted=Math.max(0,actualCompleted-t.completedQty);
+  if(newlyCompleted>0 && t.planId) {
+    const p=db.plans.find(x=>x.id===t.planId),it=p?.items?.find(x=>x.foodId===t.foodId);
+    if(p&&it) {
+      p.checks=p.checks||{};
+      p.checks[t.foodId]=Math.min(Number(it.qty)||0,(Number(p.checks[t.foodId])||0)+newlyCompleted);
+    }
+  }
+  t.completedQty=actualCompleted;
+  if(t.completedQty>=t.batchQty) finishTimer(t);
+  else {
+    t.nextItemAt=Number(t.startedAt)+((t.completedQty+1)*durationMs);
+    t.endsAt=Number(t.startedAt)+(t.batchQty*durationMs);
+  }
+}
+function finishTimer(t) {
+  if(t.status==='done') return;
+  t.status='done'; t.completedQty=Math.max(1,Number(t.batchQty)||1);
+  t.completedAt=Number(t.startedAt)+(Number(t.durationMinutes)||1)*60000*t.completedQty;
+  if(!t.notified && 'Notification' in window && Notification.permission==='granted') {
+    try { new Notification('Hay Day – Food hoàn thành',{body:`${t.accountName||'Tài khoản'}: đã hoàn thành ${t.completedQty} ${t.foodName} · ${t.machineName||''}`,tag:'hayday-'+t.id}); } catch(e){}
+  }
+  t.notified=true;
+  try { const payload=JSON.stringify(db);localStorage.setItem('hayday-v1',payload);lastPersisted=payload; } catch(e) { const s=$('syncStatus');if(s)s.textContent='⚠ Bộ nhớ gần đầy'; }
+}
+function renderProduction(){
+  if(!$('activeTimerList')) return;
+  db.activeTimers=db.activeTimers||[];
+  db.activeTimers.filter(t=>t.status==='running').forEach(syncTimerProgress);
+  const running=db.activeTimers.filter(t=>t.status==='running').sort((a,b)=>(a.nextItemAt||a.endsAt)-(b.nextItemAt||b.endsAt));
+  const ready=db.activeTimers.filter(t=>t.status==='done').sort((a,b)=>(a.completedAt||a.endsAt)-(b.completedAt||b.endsAt));
+  const collected=db.activeTimers.filter(t=>t.status==='collected').sort((a,b)=>(b.collectedAt||0)-(a.collectedAt||0));
+  $('timerSummary').textContent=`${running.length} mẻ đang chạy · ${ready.length} mẻ cần thu hoạch · ${collected.length} mẻ đã thu hoạch`;
+  $('timerNoticeStatus').textContent= !('Notification' in window)?'Trình duyệt không hỗ trợ thông báo':Notification.permission==='granted'?'🔔 Đã cấp quyền thông báo':Notification.permission==='denied'?'Thông báo đang bị chặn trong trình duyệt':'Chưa cấp quyền thông báo · nhấn “Bật thông báo”';
+  const accountLabel=t=>`<span class="muted">👤 ${esc(t.accountName||'Chưa gán tài khoản')}</span>`;
+  const runHtml=running.map(t=>`<div class="timer-card"><img class="timer-photo" src="${img(t.image)}" alt=""><div><b>${esc(t.foodName)}</b><div>${accountLabel(t)}</div><div class="muted">${esc(t.machineName||'')} · ${t.completedQty||0}/${t.batchQty||1} sản phẩm · ${t.durationMinutes} phút/món</div><div class="timer-clock">${formatClock(Math.max(0,(t.nextItemAt||t.endsAt)-Date.now()))}</div><div class="muted">Sản phẩm tiếp theo · Cả mẻ ${new Date(t.endsAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div></div><div class="timer-actions"><button class="btn danger small" onclick="cancelFoodTimer('${t.id}')">Hủy</button></div></div>`).join('');
+  const readyHtml=ready.map(t=>`<div class="timer-card done"><img class="timer-photo" src="${img(t.image)}" alt=""><div><b>${esc(t.foodName)}</b><div class="status-ready">🔔 ${esc(t.accountName||'Acc chưa gán')} · CẦN THU HOẠCH</div><div class="muted">${t.completedQty||t.batchQty||1} sản phẩm · Hoàn thành ${new Date(t.completedAt||t.endsAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div></div><div class="timer-actions"><button class="btn primary small" onclick="markTimerCollected('${t.id}')">✓ Đã thu hoạch</button></div></div>`).join('');
+  const collectedHtml=collected.slice(0,12).map(t=>`<div class="timer-card"><img class="timer-photo" src="${img(t.image)}" alt=""><div><b>${esc(t.foodName)}</b><div class="status-idle">✓ ${esc(t.accountName||'Acc')} · Đã thu hoạch</div><div class="muted">${t.completedQty||t.batchQty||1} sản phẩm · ${new Date(t.collectedAt||t.completedAt||t.endsAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`).join('');
+  $('activeTimerList').innerHTML=running.length||ready.length||collected.length
+    ? (ready.length?'<h3 class="status-ready">🔔 Các acc cần vào thu hoạch</h3>'+readyHtml:'')
+      +(running.length?'<h3 style="margin-top:22px">⏳ Đang sản xuất</h3>'+runHtml:'')
+      +(collected.length?'<h3 style="margin-top:22px">✓ Đã thu hoạch gần đây</h3>'+collectedHtml:'')
+    : '<div class="empty">Chưa có mẻ sản xuất nào. Thêm tài khoản rồi bắt đầu chạy Food cho từng acc.</div>';
+}
+function markTimerCollected(id) {
+  const t=(db.activeTimers||[]).find(x=>x.id===id); if(!t||t.status!=='done') return;
+  t.status='collected';t.collectedAt=Date.now();save();
+}
+function cancelFoodTimer(id){const t=(db.activeTimers||[]).find(x=>x.id===id);if(!t)return;if(!confirm(`Hủy đếm ngược ${t.foodName}?`))return;db.activeTimers=db.activeTimers.filter(x=>x.id!==id);save();}
+function removeFoodTimer(id){db.activeTimers=(db.activeTimers||[]).filter(x=>x.id!==id);save();}
+function clearFinishedTimers(){db.activeTimers=(db.activeTimers||[]).filter(x=>x.status!=='collected');save();}
+setInterval(()=>{let changed=false;(db.activeTimers||[]).forEach(t=>{if(t.status==='running'){const before=Number(t.completedQty)||0,was=t.status;syncTimerProgress(t);if((Number(t.completedQty)||0)!==before||t.status!==was)changed=true;}});if(view==='production')renderProduction();else if(changed){try{const payload=JSON.stringify(db);localStorage.setItem('hayday-v1',payload);lastPersisted=payload;}catch(e){}renderPlans();renderDashboard();}},1000);
+// Recalculate timers when returning to the tab/window, including after sleep.
+function refreshTimersAfterFocus(){(db.activeTimers||[]).forEach(t=>{if(t.status==='running')syncTimerProgress(t);});try{const payload=JSON.stringify(db);localStorage.setItem('hayday-v1',payload);lastPersisted=payload;}catch(e){}if(view==='production')renderProduction();else{renderPlans();renderDashboard();}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshTimersAfterFocus();});
+window.addEventListener('focus',refreshTimersAfterFocus);
+
+/* ACCOUNT MANAGEMENT */
+const ACCOUNT_ROLES = {
+  warehouse: {label:'Acc kho nguyên liệu',icon:'📦',className:'role-warehouse',kind:'warehouse',description:'Lưu trữ và điều phối nguyên liệu.'},
+  ingredient: {label:'Acc SX nguyên liệu',icon:'🌾',className:'role-ingredient',kind:'ingredient',description:'Sản xuất nguyên liệu phục vụ các acc khác.'},
+  food: {label:'Acc SX Food',icon:'🍞',className:'role-food',kind:'food',description:'Chạy máy, theo dõi tiến độ và thu hoạch Food.'}
+};
+function getAccountRoleDefs(){
+  db.accountRoleLabels=db.accountRoleLabels||{};
+  db.customAccountRoles=db.customAccountRoles||[];
+  const builtins=Object.entries(ACCOUNT_ROLES).map(([id,meta])=>({id,...meta,label:db.accountRoleLabels[id]||meta.label}));
+  return builtins.concat(db.customAccountRoles.map(r=>({...r,className:'role-custom',kind:'custom',description:r.description||'Nhóm tài khoản tùy chỉnh.'})));
+}
+function accountRole(a){const role=a?.role;return getAccountRoleDefs().some(r=>r.id===role)?role:'food';}
+let editingAccountRoleId = null;
+let selectedAccountFilter = 'all';
+function openAccountDialog({account=null, preselectedRole='food'}={}) {
+  editingAccountRoleId = account?.id || null;
+  $('accountDialogTitle').textContent = account ? 'Đổi vai trò tài khoản' : 'Thêm tài khoản';
+  $('accountDialogSubtitle').textContent = account ? `Chọn nhiệm vụ mới cho ${account.name}.` : 'Đặt tên và chọn nhiệm vụ cho tài khoản Hay Day.';
+  $('accountNameField').hidden = !!account;
+  $('accountDialogSubmit').textContent = account ? 'Lưu thay đổi' : 'Thêm tài khoản';
+  $('accountNameInput').value = account?.name || '';
+  const defs=getAccountRoleDefs();
+  const selected=account?accountRole(account):(defs.some(r=>r.id===preselectedRole)?preselectedRole:'food');
+  $('accountRolePicker').innerHTML=defs.map(r=>`<label class="role-option" data-role="${esc(r.id)}">
+    <input type="radio" name="accountRoleChoice" value="${esc(r.id)}" ${r.id===selected?'checked':''}>
+    <span class="role-option-icon">${r.icon||'🗂️'}</span>
+    <span class="role-option-copy"><b>${esc(r.label)}</b><small>${esc(r.description||'Nhóm tài khoản tùy chỉnh.')}</small></span>
+    <span class="role-option-check">✓</span></label>`).join('');
+  $('accountDialog').showModal();
+  if (!account) setTimeout(()=>$('accountNameInput').focus(), 30);
+}
+function addAccount(preselectedRole=null) { openAccountDialog({preselectedRole:preselectedRole || 'food'}); }
+function openRoleManager(){
+  const defs=getAccountRoleDefs();
+  $('roleManagerList').innerHTML=defs.map(r=>`<div class="role-manager-item" data-role-id="${esc(r.id)}">
+    <span class="role-manager-icon">${r.icon||'🗂️'}</span>
+    <b>${esc(r.id in ACCOUNT_ROLES?'Vai trò có sẵn':'Vai trò mới')}</b>
+    <input type="text" maxlength="50" value="${esc(r.label)}" aria-label="Tên vai trò">
+    ${r.id in ACCOUNT_ROLES?'':'<small>Vai trò tùy chỉnh · không thay đổi chức năng sản xuất Food</small>'}
+  </div>`).join('');
+  if(!$('roleManagerDialog').open) $('roleManagerDialog').showModal();
+}
+function saveRoleNames(){
+  db.accountRoleLabels=db.accountRoleLabels||{};
+  $('roleManagerList').querySelectorAll('.role-manager-item').forEach(row=>{
+    const id=row.dataset.roleId, name=row.querySelector('input').value.trim();
+    if(!name){alert('Tên vai trò không được để trống.');return;}
+    if(id in ACCOUNT_ROLES) db.accountRoleLabels[id]=name;
+    else {const r=(db.customAccountRoles||[]).find(x=>x.id===id);if(r)r.label=name;}
+  });
+  save(); $('roleManagerDialog').close();
+}
+function addCustomAccountRole(){
+  const name=$('newRoleName').value.trim();if(!name){$('newRoleName').focus();return;}
+  const duplicate=getAccountRoleDefs().some(r=>r.label.toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi'));
+  if(duplicate){alert('Tên vai trò đã tồn tại.');return;}
+  db.customAccountRoles=db.customAccountRoles||[];
+  db.customAccountRoles.push({id:'custom_'+uid(),label:name,icon:'🗂️',description:'Nhóm tài khoản tùy chỉnh.'});
+  $('newRoleName').value='';
+  openRoleManager();
+  save();
+}
+function renameAccount(id) {
+  const a=(db.accounts||[]).find(x=>x.id===id);if(!a)return;
+  const name=prompt('Đổi tên tài khoản:',a.name);
+  if(name===null)return;
+  const clean=name.trim();if(!clean){alert('Tên tài khoản không được để trống.');return;}
+  if(db.accounts.some(x=>x.id!==id&&x.name.toLowerCase()===clean.toLowerCase())){alert('Tên này đã được sử dụng.');return;}
+  a.name=clean;
+  (db.activeTimers||[]).filter(t=>t.accountId===id).forEach(t=>t.accountName=clean);
+  save();
+}
+function changeAccountRole(id) {
+  const a=(db.accounts||[]).find(x=>x.id===id);if(!a)return;
+  openAccountDialog({account:a});
+}
+function deleteAccount(id) {
+  const a=(db.accounts||[]).find(x=>x.id===id);if(!a)return;
+  const stock=(db.inventory||[]).filter(x=>x.accountId===id&&(Number(x.qty||0)>0||Number(x.minQty||0)>0));
+  if(stock.length){alert(`Không thể xóa ${a.name} vì kho còn ${stock.length} dòng nguyên liệu. Hãy chuyển hoặc xử lý hết tồn kho trước để không mất dữ liệu.`);go('inventory');inventoryTab='accounts';renderInventory();return;}
+  const linked=(db.activeTimers||[]).filter(t=>t.accountId===id&&['running','done'].includes(t.status)).length;
+  if(!confirm(`Xóa ${a.name}? ${linked?linked+' mẻ đang chạy hoặc cần thu hoạch sẽ được giữ lại nhưng không còn liên kết tài khoản.':''}`))return;
+  db.accounts=db.accounts.filter(x=>x.id!==id);
+  (db.activeTimers||[]).filter(t=>t.accountId===id).forEach(t=>{t.accountId=null;t.accountName=a.name+' (đã xóa)';});
+  save();
+}
+function selectAccountFilter(filter){
+  selectedAccountFilter=filter;
+  const meta=getAccountRoleDefs().find(r=>r.id===filter);
+  const popup=$('listPopup'), title=$('listPopupTitle');
+  if(!popup||!title)return;
+  title.textContent=filter==='all'
+    ? '👥 Tất cả tài khoản ('+(db.accounts||[]).length+')'
+    : filter==='harvest'
+      ? '🔔 Mẻ cần thu hoạch ('+(db.activeTimers||[]).filter(t=>t.status==='done').length+')'
+      : ((meta?.icon||'🗂️')+' '+(meta?.label||'Danh sách tài khoản'));
+  renderAccounts(true);
+  if(typeof popup.showModal==='function'){
+    if(!popup.open)popup.showModal();
+  }else popup.setAttribute('open','');
+}
+function renderAccounts(renderForPopup=false) {
+  if(!$('accountList'))return;
+  db.accounts=db.accounts||[];
+  db.accounts.forEach(a=>{if(!a.role)a.role='food';});
+  const timers=db.activeTimers||[], ready=timers.filter(t=>t.status==='done'), running=timers.filter(t=>t.status==='running');
+  const defs=getAccountRoleDefs();
+  const countFor=id=>db.accounts.filter(a=>accountRole(a)===id).length;
+  const roleTiles=defs.map(r=>`<button type="button" class="account-overview-card ${r.className} ${selectedAccountFilter===r.id?'active':''}" onclick="selectAccountFilter('${esc(r.id)}')">
+    <span class="overview-icon">${r.icon||'🗂️'}</span><div><b>${countFor(r.id)}</b><span>${esc(r.label)}</span></div></button>`).join('');
+  $('accountOverview').innerHTML=`<button type="button" class="account-overview-card total ${selectedAccountFilter==='all'?'active':''}" onclick="selectAccountFilter('all')"><span class="overview-icon">👥</span><div><b>${db.accounts.length}</b><span>Tổng tài khoản</span></div></button>
+    ${roleTiles}
+    <button type="button" class="account-overview-card harvest ${''}" onclick="selectAccountFilter('harvest')"><span class="overview-icon">🔔</span><div><b>${ready.length}</b><span>Mẻ cần thu hoạch</span></div></button>`;
+  const descriptions={
+    warehouse:'Lưu trữ số lượng nguyên liệu và chuyển nguyên liệu đến các tài khoản sản xuất.',
+    ingredient:'Dùng máy để sản xuất nguyên liệu, sau đó chuyển thành phẩm về kho hoặc acc cần dùng.',
+    food:'Nhận nguyên liệu để sản xuất Food, theo dõi tiến độ máy và các mẻ cần thu hoạch.'
+  };
+  const visibleDefs=defs.filter(r=>selectedAccountFilter==='all'||selectedAccountFilter==='harvest'||r.id===selectedAccountFilter);
+  const accountHtml=visibleDefs.map(meta=>{
+    const role=meta.id, group=db.accounts.filter(a=>accountRole(a)===role);
+    const cards=group.filter(a=>selectedAccountFilter!=='harvest'||ready.some(t=>t.accountId===a.id)).map(a=>{
+      const ar=ready.filter(t=>t.accountId===a.id), rr=running.filter(t=>t.accountId===a.id);
+      const productsReady=ar.reduce((n,t)=>n+(Number(t.completedQty)||Number(t.batchQty)||1),0);
+      const next=rr.slice().sort((x,y)=>(x.nextItemAt||x.endsAt)-(y.nextItemAt||y.endsAt))[0];
+      const status=meta.kind==='food'?(ar.length?'<span class="status-ready">🔔 Cần thu hoạch</span>':rr.length?'<span class="status-running">⏳ Đang sản xuất</span>':'<span class="status-idle">○ Chưa có mẻ đang chạy</span>'):'<span class="status-idle">✓ Tài khoản đã sẵn sàng</span>';
+      let detailHtml = `<div class="account-purpose">${esc(meta.description||'Nhóm tài khoản tùy chỉnh.')}</div>`;
+      if(meta.kind==='food'){
+        const foodStatus = ar.length
+          ? `<div class="muted account-note">${ar.map(t=>esc(t.foodName)+' × '+(t.completedQty||t.batchQty||1)).join(' · ')}</div><button class="btn primary small" style="margin-top:10px" onclick="collectAccount('${a.id}')">✓ Đã thu hoạch acc này</button>`
+          : next
+            ? `<div class="muted account-note">Món tiếp theo xong lúc ${new Date(next.nextItemAt||next.endsAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}: ${esc(next.foodName)}</div>`
+            : '<div class="muted account-note">Chưa có Food nào được giao cho tài khoản này.</div>';
+        detailHtml = `<div class="account-stats"><span class="account-stat">🔔 ${ar.length} mẻ chờ thu hoạch</span><span class="account-stat">📦 ${productsReady} sản phẩm sẵn sàng</span><span class="account-stat">⏳ ${rr.length} mẻ đang chạy</span></div>
+          <details class="account-machine-settings"><summary>⚙ Máy được phép sử dụng <small>(bỏ chọn = tất cả máy)</small></summary><div class="row wrap" style="margin-top:10px">${db.machines.map(m=>`<label class="account-stat"><input type="checkbox" ${!Array.isArray(a.machineIds)||!a.machineIds.length||a.machineIds.includes(m.id)?'checked':''} onchange="toggleAccountMachine('${a.id}','${m.id}',this.checked)"> ${esc(m.name)}</label>`).join('')}</div></details>${foodStatus}`;
+      }
+      return `<article class="account-card ${meta.className}">
+        <div class="account-card-head"><div class="account-name-wrap"><div class="account-avatar">${meta.icon||'🗂️'}</div><div class="account-name"><b>${esc(a.name)}</b><span>${status}</span></div></div>
+        <div class="account-actions"><button class="btn plain small" onclick="renameAccount('${a.id}')">Đổi tên</button><button class="btn soft small" onclick="changeAccountRole('${a.id}')">Đổi vai trò</button><button class="btn danger small" onclick="deleteAccount('${a.id}')">Xóa</button></div></div>
+        ${detailHtml}
+      </article>`;
+    }).join('');
+    const showEmpty=selectedAccountFilter!=='harvest'||cards;
+    if(selectedAccountFilter==='harvest'&&!cards)return '';
+    return `<section class="account-group ${meta.className}"><header class="account-group-head"><div class="account-group-title"><span class="group-icon">${meta.icon||'🗂️'}</span><div><h2>${esc(meta.label)}</h2><p>${esc(descriptions[meta.kind]||meta.description||'Nhóm tài khoản tùy chỉnh.')}</p></div></div><div class="account-group-tools"><span class="group-count">${group.length} tài khoản</span><button class="btn soft small" onclick="addAccount('${esc(role)}')">＋ Thêm acc</button></div></header>
+      <div class="account-group-body">${cards||`<div class="account-group-empty"><span>${meta.icon||'🗂️'}</span><div><b>${selectedAccountFilter==='harvest'?'Không có acc nào cần thu hoạch':`Chưa có tài khoản ${esc(meta.label.toLowerCase())}`}</b><p>${esc(meta.description||'Thêm tài khoản vào nhóm này để bắt đầu quản lý.')}</p></div><button class="btn plain small" onclick="addAccount('${esc(role)}')">＋ Tạo tài khoản</button></div>`}</div></section>`;
+  }).join('')+(selectedAccountFilter==='harvest'&&!ready.length?'<div class="empty">Hiện không có tài khoản nào cần thu hoạch.</div>':'')+(selectedAccountFilter==='all'&&!db.accounts.length?`<div class="account-first-use"><span>👋</span><div><b>Bắt đầu thiết lập hệ thống tài khoản</b><p>Hãy tạo tài khoản theo từng nhóm ở trên.</p></div></div>`:'');
+  // Trang chính luôn gọn: danh sách chỉ được hiển thị trong popup khi người dùng bấm một ô.
+  $('accountList').innerHTML='';
+  if(renderForPopup || $('listPopup')?.open) $('listPopupContent').innerHTML=accountHtml;
+}
+function collectAccount(accountId) {
+  const list=(db.activeTimers||[]).filter(t=>t.accountId===accountId&&t.status==='done');
+  if(!list.length)return;
+  const a=(db.accounts||[]).find(x=>x.id===accountId);
+  if(!confirm(`Xác nhận đã vào ${a?.name||'tài khoản'} và thu hoạch ${list.length} mẻ?`))return;
+  list.forEach(t=>{t.status='collected';t.collectedAt=Date.now();});
+  save();
+}
+
+/* INVENTORY + SCHEDULING + MULTI-ACCOUNT MACHINE ALLOCATION */
+let autoDemands = [];
+function ingredientKey(name){return String(name||'').trim().toLocaleLowerCase('vi');}
+function inventoryAccounts(){
+  return db.accounts?.length ? db.accounts : [{id:'',name:'Kho chưa gán tài khoản'}];
+}
+function findInventory(name,accountId){
+  return (db.inventory||[]).find(x=>ingredientKey(x.name)===ingredientKey(name)&&String(x.accountId||'')===String(accountId||''));
+}
+function ensureInventoryRow(name,image,accountId){
+  db.inventory=db.inventory||[];
+  let row=findInventory(name,accountId);
+  if(!row){row={id:uid(),name,image:image||'',accountId:accountId||'',qty:0,minQty:0,manualEntry:true,updatedAt:Date.now()};db.inventory.push(row);}
+  else if(!row.image&&image)row.image=image;
+  return row;
+}
+function ensureInventoryCatalog(){
+  db.inventory=db.inventory||[];
+  db.accounts=db.accounts||[];
+  // Chuyển dữ liệu kho cũ chưa gắn acc sang acc đầu tiên, không tự tạo toàn bộ nguyên liệu cho mọi acc.
+  if(db.accounts.length){
+    db.inventory.filter(x=>!x.accountId).forEach(x=>{x.accountId=db.accounts[0].id;});
+  }
+  // Dọn các dòng 0 tồn/0 định mức do phiên bản cũ tự sinh từ danh mục Food.
+  // Giữ lại các dòng người dùng đã thêm hoặc đã từng cấu hình.
+  const catalogKeys=new Set(collectIngredientCatalog().map(i=>ingredientKey(i.name)));
+  db.inventory=db.inventory.filter(x=>x.manualEntry||Number(x.qty||0)!==0||Number(x.minQty||0)!==0||x.replenishManual||!catalogKeys.has(ingredientKey(x.name)));
+}
+function inventorySuggestedQty(row){return Math.max(0,Number(row.minQty||0)-Number(row.qty||0));}
+function logInventory(action, name, qty, accountId, note='', fromAccountId=''){
+  db.inventoryHistory=db.inventoryHistory||[];
+  const account=(db.accounts||[]).find(a=>a.id===accountId);
+  const from=(db.accounts||[]).find(a=>a.id===fromAccountId);
+  db.inventoryHistory.unshift({id:uid(),action,name,qty:Number(qty)||0,accountId:accountId||'',accountName:account?.name||'Kho chưa gán acc',fromAccountId:fromAccountId||'',fromAccountName:from?.name||'',note,at:Date.now()});
+  if(db.inventoryHistory.length>1000)db.inventoryHistory.length=1000;
+}
+function setInventoryMinimum(id,value){
+  const row=db.inventory.find(x=>x.id===id);if(!row)return;
+  const n=Number(value);if(!Number.isFinite(n)||n<0){alert('Mức tồn tối thiểu phải là số không âm.');renderInventory();return;}
+  row.minQty=n;row.updatedAt=Date.now();
+  // Keep manual quantity only when the user has explicitly overridden it.
+  save();
+}
+function setReplenishQty(id,value){
+  const row=db.inventory.find(x=>x.id===id);if(!row)return;
+  const n=Number(value);if(!Number.isFinite(n)||n<0){alert('Số lượng cần nhập phải là số không âm.');renderInventory();return;}
+  row.replenishQty=n;row.replenishManual=true;row.updatedAt=Date.now();save();
+}
+function useAutoReplenish(id){
+  const row=db.inventory.find(x=>x.id===id);if(!row)return;
+  delete row.replenishQty;row.replenishManual=false;row.updatedAt=Date.now();save();
+}
+function applyReplenishment(id){
+  const row=db.inventory.find(x=>x.id===id);if(!row)return;
+  const qty=row.replenishManual?Number(row.replenishQty||0):inventorySuggestedQty(row);
+  if(!Number.isFinite(qty)||qty<0){alert('Số lượng cần nhập không hợp lệ.');return;}
+  if(qty===0){alert('Số lượng cần nhập đang bằng 0.');return;}
+  row.qty=Number(row.qty||0)+qty;row.updatedAt=Date.now();
+  logInventory('replenish',row.name,qty,row.accountId,'Bổ sung theo cảnh báo tồn kho');
+  delete row.replenishQty;row.replenishManual=false;
+  save();
+}
+
+let inventoryTab='accounts';
+function setInventoryTab(tab){inventoryTab=tab;renderInventory();}
+function renameIngredientCatalog(name){
+  const next=prompt('Tên nguyên liệu mới:',name);if(next===null)return;
+  const clean=next.trim();if(!clean)return;
+  if(collectIngredientCatalog().some(x=>ingredientKey(x.name)===ingredientKey(clean)&&ingredientKey(x.name)!==ingredientKey(name))){alert('Tên nguyên liệu này đã tồn tại.');return;}
+  (db.ingredients||[]).forEach(x=>{if(ingredientKey(x.name)===ingredientKey(name))x.name=clean;});
+  (db.foods||[]).forEach(f=>(f.ingredients||[]).forEach(x=>{if(ingredientKey(x.name)===ingredientKey(name))x.name=clean;}));
+  (db.inventory||[]).forEach(x=>{if(ingredientKey(x.name)===ingredientKey(name))x.name=clean;});
+  save();
+}
+function deleteIngredientCatalog(name){
+  const usedInRecipe=(db.foods||[]).some(f=>(f.ingredients||[]).some(i=>ingredientKey(i.name)===ingredientKey(name)));
+  if(usedInRecipe){alert('Nguyên liệu đang được dùng trong công thức Food nên không thể xóa khỏi danh mục chung. Bạn có thể đổi tên nếu cần.');return;}
+  const used=(db.inventory||[]).some(x=>ingredientKey(x.name)===ingredientKey(name)&&(Number(x.qty||0)>0||Number(x.minQty||0)>0));
+  if(used){alert('Nguyên liệu đang có tồn kho hoặc định mức. Hãy xử lý các kho liên quan trước khi xóa khỏi danh mục.');return;}
+  if(!confirm(`Xóa “${name}” khỏi danh mục chung?`))return;
+  db.ingredients=(db.ingredients||[]).filter(x=>ingredientKey(x.name)!==ingredientKey(name));
+  db.inventory=(db.inventory||[]).filter(x=>ingredientKey(x.name)!==ingredientKey(name));
+  save();
+}
+function toggleInventoryAccount(id){
+  window.inventoryExpandedAccounts=window.inventoryExpandedAccounts||{};
+  window.inventoryExpandedAccounts[id]=!window.inventoryExpandedAccounts[id];
+  renderInventory();
+}
+let inventorySort='qty-desc';
+function sortInventoryItems(items,qtyOf){
+  const copy=items.slice();
+  copy.sort((a,b)=>{
+    if(inventorySort==='qty-desc')return qtyOf(b)-qtyOf(a)||a.name.localeCompare(b.name,'vi');
+    if(inventorySort==='qty-asc')return qtyOf(a)-qtyOf(b)||a.name.localeCompare(b.name,'vi');
+    if(inventorySort==='name-desc')return b.name.localeCompare(a.name,'vi');
+    return a.name.localeCompare(b.name,'vi');
+  });
+  return copy;
+}
+function inventoryImage(image){
+  return image?`<img src="${img(image)}" alt="" loading="lazy">`:'<span>🌾</span>';
+}
+function openInventoryStatPopup(type){
+  ensureInventoryCatalog();
+  const accounts=db.accounts||[];
+  const rows=db.inventory||[];
+  const catalog=collectIngredientCatalog();
+  const qty=x=>Number(x.qty||0);
+  const accountName=id=>accounts.find(a=>String(a.id)===String(id))?.name||'Kho chưa gán acc';
+  const roleName=a=>{const r=getAccountRoleDefs().find(x=>x.id===a.role);return r?.label||'Chưa phân nhóm';};
+  let title='',description='',body='';
+  const accountRows=(a,filtered=rows.filter(x=>String(x.accountId||'')===String(a.id)))=>{
+    const total=filtered.reduce((n,x)=>n+qty(x),0);
+    const active=filtered.filter(x=>qty(x)>0);
+    return `<div class="inventory-account-card" style="padding:13px">
+      <div class="row between wrap"><div><b>👤 ${esc(a.name)}</b><div class="muted">${esc(roleName(a))}</div></div><b style="color:var(--d)">${total.toLocaleString('vi-VN')} tổng tồn</b></div>
+      <div class="inventory-account-summary"><span class="inventory-summary-chip">${filtered.length} nguyên liệu theo dõi</span><span class="inventory-summary-chip">${active.length} loại có tồn</span><span class="inventory-summary-chip">${filtered.filter(x=>qty(x)<Number(x.minQty||0)).length} loại thiếu</span></div>
+      ${active.length?`<div style="margin-top:10px">${sortInventoryItems(active,(x)=>qty(x)).map(x=>`<div class="row between" style="padding:7px 0;border-top:1px solid var(--line)"><span>${esc(x.name)}</span><b>${qty(x).toLocaleString('vi-VN')}</b></div>`).join('')}</div>`:'<div class="muted" style="margin-top:9px">Chưa có nguyên liệu tồn kho.</div>'}
+      <div style="text-align:right;margin-top:10px"><button class="btn soft small" onclick="listPopup.close();go('inventory');inventoryTab='accounts';window.inventoryExpandedAccounts=window.inventoryExpandedAccounts||{};window.inventoryExpandedAccounts['${String(a.id).replace(/'/g,"\\'")}']=true;renderInventory()">Mở kho acc ↗</button></div>
+    </div>`;
+  };
+  if(type==='farms'){
+    title=`Danh sách Farm (${accounts.length})`;description='Thông tin từng tài khoản, vai trò và lượng nguyên liệu đang giữ.';
+    body=accounts.length?accounts.map(a=>accountRows(a)).join(''):'<div class="empty">Chưa có Farm nào. Hãy thêm tài khoản trong mục Tài khoản.</div>';
+  }else if(type==='ingredients'){
+    title=`Các loại nguyên liệu (${catalog.length})`;description='Chọn nguyên liệu để xem những Farm đang giữ và số lượng tại từng acc.';
+    body=catalog.length?catalog.map(item=>{const matches=rows.filter(x=>ingredientKey(x.name)===ingredientKey(item.name));const total=matches.reduce((n,x)=>n+qty(x),0);const holders=matches.filter(x=>qty(x)>0);return `<div class="inventory-summary-item"><div class="inventory-emoji">${inventoryImage(item.image)}</div><div class="inventory-summary-copy"><b>${esc(item.name)}</b><small>${holders.length} acc có tồn · ${matches.length} kho đã thiết lập</small></div><div class="inventory-total">${total.toLocaleString('vi-VN')}<small>Tổng số lượng</small></div></div>${holders.length?`<div class="muted" style="padding:0 4px 10px">${holders.map(x=>`${esc(accountName(x.accountId))}: <b>${qty(x).toLocaleString('vi-VN')}</b>`).join('　·　')}</div>`:''}`}).join(''):'<div class="empty">Chưa có nguyên liệu trong danh mục.</div>';
+  }else{
+    let filtered=rows;
+    if(type==='stocked')filtered=rows.filter(x=>qty(x)>0);
+    if(type==='low')filtered=rows.filter(x=>qty(x)<Number(x.minQty||0));
+    if(type==='near')filtered=rows.filter(x=>Number(x.minQty||0)>0&&qty(x)>=Number(x.minQty||0)&&qty(x)<=Number(x.minQty||0)*1.2);
+    title=({total:'Chi tiết tổng tồn',stocked:'Các kho acc có tồn',low:'Acc có nguyên liệu dưới mức tối thiểu',near:'Acc sắp chạm định mức'})[type]||'Chi tiết kho';
+    description=type==='total'?'Tổng số lượng được phân bổ theo từng Farm; số liệu không gộp mất thông tin từng acc.':type==='stocked'?'Danh sách acc đang giữ ít nhất một loại nguyên liệu.':type==='low'?'Các nguyên liệu đang thấp hơn mức tối thiểu đã cài ở từng acc.':'Các nguyên liệu đang ở gần mức tồn tối thiểu.';
+    const grouped=accounts.map(a=>({a,items:filtered.filter(x=>String(x.accountId||'')===String(a.id))})).filter(x=>x.items.length);
+    body=grouped.length?grouped.map(({a,items})=>accountRows(a,items)).join(''):'<div class="empty">Không có dữ liệu phù hợp.</div>';
+  }
+  $('listPopupTitle').textContent=title;
+  $('listPopupContent').innerHTML=`<p class="muted" style="margin:0 0 12px">${description}</p>${body}`;
+  $('listPopup').showModal();
+}
+
+function renderInventory(){
+  if(!$('inventoryList'))return;
+  ensureInventoryCatalog();
+  const q=($('inventorySearch')?.value||'').toLocaleLowerCase('vi');
+  if($('inventorySort'))$('inventorySort').value=inventorySort;
+  const accounts=inventoryAccounts();
+  const names=collectIngredientCatalog().filter(x=>x.name.toLocaleLowerCase('vi').includes(q));
+  const totalUnits=db.inventory.reduce((n,x)=>n+(Number(x.qty)||0),0);
+  const low=db.inventory.filter(x=>Number(x.qty||0)<Number(x.minQty||0));
+  const near=db.inventory.filter(x=>Number(x.minQty||0)>0&&Number(x.qty||0)>=Number(x.minQty||0)&&Number(x.qty||0)<=Number(x.minQty||0)*1.2);
+  const stocked=db.inventory.filter(x=>Number(x.qty||0)>0);
+  const statCards=[
+    [(db.accounts||[]).length,'Tổng Farm','farms'],
+    [names.length,'Loại nguyên liệu','ingredients'],
+    [totalUnits.toLocaleString('vi-VN'),'Tổng tồn','total'],
+    [stocked.length,'Kho acc có tồn','stocked'],
+    [low.length,'Dưới mức tối thiểu','low'],
+    [near.length,'Sắp chạm định mức','near']
+  ];
+  $('inventoryStats').innerHTML=statCards.map(([n,t,k])=>`<button type="button" class="stat inventory-stat-click" onclick="openInventoryStatPopup('${k}')" aria-label="Xem chi tiết ${t}"><b>${n}</b><span>${t} ↗</span></button>`).join('');
+
+  const catalog=names;
+  const summaryItems=sortInventoryItems(catalog.map(item=>{
+    const rows=db.inventory.filter(x=>ingredientKey(x.name)===ingredientKey(item.name));
+    const total=rows.reduce((n,x)=>n+Number(x.qty||0),0);
+    const have=rows.filter(x=>Number(x.qty||0)>0).length;
+    const details=rows.filter(x=>Number(x.qty||0)>0).map(x=>`${esc(accounts.find(a=>a.id===x.accountId)?.name||'Chưa gán acc')}: ${Number(x.qty).toLocaleString('vi-VN')}`).join(' · ');
+    return {...item,total,have,details};
+  }),x=>x.total);
+  $('inventorySummary').innerHTML=summaryItems.length?`<div class="inventory-card-grid">${summaryItems.map(item=>`
+    <div class="inventory-tile">
+      <div class="inventory-tile-icon">${inventoryImage(item.image)}</div>
+      <div class="inventory-tile-copy"><b>${esc(item.name)}</b><small>${item.have} acc có tồn</small></div>
+      <div class="inventory-tile-qty">${item.total.toLocaleString('vi-VN')}</div>
+      <div class="inventory-tile-detail">${item.details||'Chưa có tồn kho'}</div>
+    </div>`).join('')}</div>`:'<div class="empty">Chưa có nguyên liệu trong danh mục.</div>';
+
+  $('inventoryCatalog').innerHTML=catalog.length?`<div class="inventory-card-grid">${sortInventoryItems(catalog,x=>0).map(item=>`<div class="inventory-tile inventory-catalog-tile">
+    <div class="inventory-tile-icon">${inventoryImage(item.image)}</div>
+    <div class="inventory-tile-copy"><b>${esc(item.name)}</b><small>${db.inventory.filter(x=>ingredientKey(x.name)===ingredientKey(item.name)).length} kho đã thiết lập</small></div>
+    <div class="inventory-tile-actions"><button class="btn soft small" onclick="renameIngredientCatalog('${esc(item.name).replace(/'/g,'&#39;')}')">Sửa tên</button><button class="btn danger small" onclick="deleteIngredientCatalog('${esc(item.name).replace(/'/g,'&#39;')}')">Xóa</button></div>
+  </div>`).join('')}</div>`:'<div class="empty">Danh mục chưa có nguyên liệu nào. Nhấn “Thêm nguyên liệu” để tạo danh mục dùng chung.</div>';
+
+  document.querySelectorAll('[data-inv-tab]').forEach(b=>{const active=b.dataset.invTab===inventoryTab;b.classList.toggle('primary',active);b.classList.toggle('soft',!active);});
+  $('inventorySummary').hidden=inventoryTab!=='summary';
+  $('inventoryList').hidden=inventoryTab!=='accounts';
+  $('inventoryCatalog').hidden=inventoryTab!=='catalog';
+  $('inventoryHistory').hidden=inventoryTab!=='history';
+  $('inventoryShortagePanel').hidden=['catalog','history'].includes(inventoryTab);
+  const expanded=window.inventoryExpandedAccounts||(window.inventoryExpandedAccounts={});
+  if(!Object.keys(expanded).length&&accounts.length)expanded[accounts[0].id]=true;
+  $('inventoryList').innerHTML=accounts.map(a=>{
+    const accountRows=db.inventory.filter(x=>String(x.accountId||'')===String(a.id)&&x.name.toLocaleLowerCase('vi').includes(q));
+    const total=accountRows.reduce((n,x)=>n+(Number(x.qty)||0),0);
+    const stockedCount=accountRows.filter(x=>Number(x.qty||0)>0).length;
+    const lowCount=accountRows.filter(x=>Number(x.qty||0)<Number(x.minQty||0)).length;
+    const nearCount=accountRows.filter(x=>Number(x.minQty||0)>0&&Number(x.qty||0)>=Number(x.minQty||0)&&Number(x.qty||0)<=Number(x.minQty||0)*1.2).length;
+    if(q&&!accountRows.length)return '';
+    const isOpen=!!expanded[a.id];
+    const rows=sortInventoryItems(accountRows,x=>Number(x.qty||0)).map(x=>{
+      const qty=Number(x.qty||0),min=Number(x.minQty||0),isLow=qty<min;
+      return `<div class="inventory-tile inventory-account-tile">
+        <div class="inventory-tile-icon">${inventoryImage(x.image||catalog.find(i=>ingredientKey(i.name)===ingredientKey(x.name))?.image)}</div>
+        <div class="inventory-tile-copy"><b>${esc(x.name)}</b><small>${isLow?'<span class="status-ready">⚠ Dưới định mức</span>':`<span class="status-idle">✓ ${min?'Đạt định mức':'Chưa cài định mức'}</span>`}</small></div>
+        <div class="inventory-tile-qty">${qty.toLocaleString('vi-VN')}</div>
+        <div class="inventory-tile-detail">Tối thiểu: ${min.toLocaleString('vi-VN')}</div>
+        <div class="inventory-tile-actions"><button class="btn soft small" onclick="adjustInventory('${x.id}','in')">＋ Nhập</button><button class="btn plain small" onclick="adjustInventory('${x.id}','out')">− Xuất</button><button class="btn plain small" onclick="adjustInventory('${x.id}','set')">Sửa tồn</button></div>
+      </div>`;
+    }).join('');
+    return `<div class="inventory-account-card ${isOpen?'open':''}">
+      <button class="inventory-account-toggle" onclick="toggleInventoryAccount('${a.id}')"><div><b>👤 ${esc(a.name)}</b>
+      <div class="inventory-account-summary"><span class="inventory-summary-chip">${accountRows.length} nguyên liệu</span><span class="inventory-summary-chip">${stockedCount} có tồn</span><span class="inventory-summary-chip">${lowCount} thiếu định mức</span>${nearCount?`<span class="inventory-summary-chip">${nearCount} sắp chạm mức</span>`:''}</div>
+      <div class="muted" style="margin-top:5px">Tổng tồn: <b>${total.toLocaleString('vi-VN')}</b></div></div><span class="inventory-chevron">${isOpen?'▴':'▾'}</span></button>
+      ${isOpen?`<div class="inventory-account-details">${rows?`<div class="inventory-card-grid">${rows}</div>`:'<div class="empty">Acc này chưa được thêm nguyên liệu nào. Nhấn “＋ Nhập / điều chỉnh” để thêm nguyên liệu vào đúng acc.</div>'}</div>`:''}
+    </div>`;
+  }).join('')||'<div class="empty">Không có tài khoản hoặc nguyên liệu phù hợp.</div>';
+
+  const history=(db.inventoryHistory||[]).filter(h=>!q||String(h.name||'').toLocaleLowerCase('vi').includes(q)||String(h.accountName||'').toLocaleLowerCase('vi').includes(q)||String(h.fromAccountName||'').toLocaleLowerCase('vi').includes(q));
+  $('inventoryHistory').innerHTML=history.length?`<div class="muted" style="margin-bottom:8px">Lưu tối đa 1.000 thao tác gần nhất.</div><div style="overflow-x:auto"><table class="inventory-history-table"><thead><tr><th>Thời gian</th><th>Thao tác</th><th>Nguyên liệu</th><th>Số lượng</th><th>Tài khoản / luồng chuyển</th></tr></thead><tbody>${history.map(h=>`<tr><td>${new Date(h.at).toLocaleString('vi-VN')}</td><td><b>${esc(({in:'Nhập kho',out:'Xuất kho',set:'Điều chỉnh tồn',transfer:'Chuyển kho',replenish:'Bổ sung'}[h.action])||h.action)}</b></td><td>${esc(h.name)}</td><td>${Number(h.qty||0).toLocaleString('vi-VN')}</td><td>${h.action==='transfer'?`${esc(h.fromAccountName)} → ${esc(h.accountName)}`:esc(h.accountName)}${h.note?`<div class="muted">${esc(h.note)}</div>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có lịch sử nhập, xuất hoặc điều chuyển. Các thao tác mới sẽ được ghi lại tại đây.</div>';
+
+  const shortages=db.inventory.filter(x=>Number(x.qty||0)<Number(x.minQty||0)).sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+  $('inventoryShortage').innerHTML=shortages.length?shortages.map(x=>{
+    const account=accounts.find(a=>a.id===x.accountId);
+    const suggested=inventorySuggestedQty(x);
+    const amount=x.replenishManual?Number(x.replenishQty||0):suggested;
+    return `<div class="inventory-shortage-row"><div><b>${esc(x.name)}</b><div class="muted">${esc(account?.name||'Kho chưa gán acc')} · Còn ${Number(x.qty||0).toLocaleString('vi-VN')} / tối thiểu ${Number(x.minQty||0).toLocaleString('vi-VN')}</div></div><span class="inventory-status">${Number(x.qty||0)===0?'Hết hàng':'Thiếu hàng'}</span><label class="inventory-shortage-input">Cần nhập <input class="inventory-replenish-input" type="number" min="0" step="1" value="${amount}" onchange="setReplenishQty('${x.id}',this.value)"></label><div class="inventory-shortage-actions row wrap"><button class="btn soft small" onclick="useAutoReplenish('${x.id}')" title="Khôi phục số lượng tự tính">Dùng tự động</button><button class="btn primary small" onclick="applyReplenishment('${x.id}')">＋ Nhập kho</button></div></div>`;
+  }).join(''):'<div class="empty">🎉 Không có nguyên liệu nào dưới mức tồn tối thiểu. Hãy cài mức tồn tối thiểu cho từng acc để bật cảnh báo.</div>';
+}
+function addIngredientCatalogItem(){
+  const raw=prompt('Tên nguyên liệu mới:');
+  if(raw===null)return;
+  const name=raw.trim();
+  if(!name){alert('Vui lòng nhập tên nguyên liệu.');return;}
+  db.ingredients=db.ingredients||[];
+  if(collectIngredientCatalog().some(i=>ingredientKey(i.name)===ingredientKey(name))){alert('Nguyên liệu này đã có trong danh mục chung.');return;}
+  db.ingredients.push({name,image:''});
+  inventoryTab='catalog';
+  save();
+  alert(`Đã thêm “${name}” vào danh mục chung. Muốn ghi nhận số lượng, hãy chọn “Nhập / điều chỉnh kho”.`);
+}
+
+function openInventoryAdjust(){
+  ensureInventoryCatalog();
+  const name=prompt('Tên nguyên liệu cần thêm vào kho:');if(name===null)return;
+  const clean=name.trim();if(!clean)return;
+  const accounts=inventoryAccounts();
+  const accountChoice=accounts.length===1?1:Number(prompt('Chọn kho tài khoản:\n'+accounts.map((a,i)=>`${i+1}. ${a.name}`).join('\n')+'\n\nNhập số thứ tự:'));
+  const account=accounts[accountChoice-1];if(!account){alert('Tài khoản không hợp lệ.');return;}
+  const item=ensureInventoryRow(clean,'',account.id);
+  adjustInventory(item.id,'set');
+}
+function adjustInventory(id,mode){
+  const x=db.inventory.find(i=>i.id===id);if(!x)return;
+  const account=inventoryAccounts().find(a=>a.id===x.accountId);
+  const label=`${x.name} · ${account?.name||'Kho chưa gán acc'}`;
+  const before=Number(x.qty||0);
+  if(mode==='in'||mode==='out'){
+    const raw=prompt(`${mode==='in'?'Nhập thêm':'Xuất kho'} ${label} (số lượng):`,'1');if(raw===null)return;
+    const n=Number(raw);if(!Number.isFinite(n)||n<0){alert('Số lượng không hợp lệ.');return;}
+    if(mode==='out'&&n>Number(x.qty||0)){alert('Số lượng xuất vượt tồn kho của acc này.');return;}
+    x.qty=Math.max(0,Number(x.qty||0)+(mode==='in'?n:-n));
+  }else{
+    const raw=prompt(`Số lượng tồn thực tế của ${label}:`,String(x.qty||0));if(raw===null)return;
+    const n=Number(raw);if(!Number.isFinite(n)||n<0){alert('Số lượng không hợp lệ.');return;}x.qty=n;
+    const min=prompt(`Định mức cảnh báo thấp cho ${label}:`,String(x.minQty||0));if(min!==null&&Number.isFinite(Number(min))&&Number(min)>=0)x.minQty=Number(min);
+  }
+  x.updatedAt=Date.now();logInventory(mode==='in'?'in':mode==='out'?'out':'set',x.name,mode==='in'?Number(x.qty)-before:mode==='out'?before-Number(x.qty):Math.abs(Number(x.qty)-before),x.accountId,mode==='set'?`Điều chỉnh tồn: ${before} → ${x.qty}`:'');inventoryTab='accounts';window.inventoryExpandedAccounts=window.inventoryExpandedAccounts||{};window.inventoryExpandedAccounts[x.accountId]=true;save();
+}
+function transferInventory(){
+  ensureInventoryCatalog();
+  if((db.accounts||[]).length<2){alert('Cần có ít nhất 2 tài khoản để chuyển nguyên liệu.');return;}
+  const accounts=db.accounts;
+  const fromIndex=Number(prompt('Chuyển NGUYÊN LIỆU TỪ acc nào?\n'+accounts.map((a,i)=>`${i+1}. ${a.name}`).join('\n')+'\n\nNhập số thứ tự acc nguồn:'));
+  const from=accounts[fromIndex-1];if(!from){alert('Acc nguồn không hợp lệ.');return;}
+  const toIndex=Number(prompt('Chuyển ĐẾN acc nào?\n'+accounts.map((a,i)=>`${i+1}. ${a.name}`).join('\n')+'\n\nNhập số thứ tự acc nhận:'));
+  const to=accounts[toIndex-1];if(!to||to.id===from.id){alert('Acc nhận không hợp lệ hoặc trùng acc nguồn.');return;}
+  const available=db.inventory.filter(x=>x.accountId===from.id&&Number(x.qty)>0);
+  if(!available.length){alert(`${from.name} hiện không có nguyên liệu để chuyển.`);return;}
+  const ingIndex=Number(prompt(`Chọn nguyên liệu từ ${from.name}:\n`+available.map((x,i)=>`${i+1}. ${x.name} — ${Number(x.qty).toLocaleString('vi-VN')}`).join('\n')+'\n\nNhập số thứ tự nguyên liệu:'));
+  const source=available[ingIndex-1];if(!source){alert('Nguyên liệu không hợp lệ.');return;}
+  const raw=prompt(`Chuyển bao nhiêu ${source.name} từ ${from.name} sang ${to.name}?`,String(source.qty));if(raw===null)return;
+  const qty=Number(raw);if(!Number.isFinite(qty)||qty<=0||qty>Number(source.qty)){alert('Số lượng chuyển không hợp lệ hoặc vượt tồn kho.');return;}
+  const dest=ensureInventoryRow(source.name,source.image,to.id);
+  source.qty=Number(source.qty)-qty;dest.qty=Number(dest.qty||0)+qty;
+  source.updatedAt=dest.updatedAt=Date.now();
+  logInventory('transfer',source.name,qty,to.id,'Điều chuyển nguyên liệu',from.id);
+  inventoryTab='accounts';window.inventoryExpandedAccounts=window.inventoryExpandedAccounts||{};window.inventoryExpandedAccounts[from.id]=true;window.inventoryExpandedAccounts[to.id]=true;
+  save();alert(`Đã chuyển ${qty} ${source.name} từ ${from.name} sang ${to.name}.`);
+}
+function addAutoDemand(){autoDemands.push({foodId:db.foods[0]?.id||'',qty:1});renderAutoPlanner();}
+function renderAutoPlanner(){
+  if(!$('autoDemandList'))return;
+  if(!autoDemands.length&&db.foods.length)autoDemands=[{foodId:db.foods[0].id,qty:1}];
+  $('autoDemandList').innerHTML=autoDemands.length?autoDemands.map((d,i)=>`<div class="row wrap" style="padding:7px 0;border-bottom:1px solid var(--line)"><select class="search" style="flex:1;min-width:160px" onchange="autoDemands[${i}].foodId=this.value">${db.foods.map(f=>`<option value="${f.id}" ${f.id===d.foodId?'selected':''}>${esc(f.name)} · ${esc(db.machines.find(m=>m.id===f.machineId)?.name||'Chưa có máy')}</option>`).join('')}</select><input class="search" type="number" min="1" step="1" style="width:90px" value="${d.qty}" onchange="autoDemands[${i}].qty=Math.max(1,Math.floor(Number(this.value)||1))"><button class="btn danger small" onclick="autoDemands.splice(${i},1);renderAutoPlanner()">×</button></div>`).join(''):'<div class="empty">Thêm Food cần sản xuất để bắt đầu.</div>';
+  $('scheduleList').innerHTML=(db.schedules||[]).length?db.schedules.slice().sort((a,b)=>a.startAt-b.startAt).map(sc=>`<div class="plan-machine"><div class="row between wrap"><b>${esc(sc.foodName)} × ${sc.qty}</b><span class="muted">${new Date(sc.startAt).toLocaleString('vi-VN')} → ${new Date(sc.endAt).toLocaleString('vi-VN')}</span></div><div class="muted">${esc(sc.machineName)} · ${esc(sc.accountName)} · ${sc.status==='done'?'Hoàn thành':'Đã lên lịch'}</div></div>`).join(''):'<div class="empty">Chưa có lịch sản xuất nào.</div>';
+}
+function runAutoPlanner(){
+  if(!autoDemands.length||!autoDemands.some(d=>db.foods.some(f=>f.id===d.foodId)&&Number(d.qty)>0)){alert('Hãy thêm sản phẩm và số lượng hợp lệ.');return;}
+  const foodAccounts=(db.accounts||[]).filter(a=>accountRole(a)==='food');
+  if(!foodAccounts.length){alert('Hãy tạo ít nhất một acc có vai trò “Sản xuất Food” trước khi phân chia.');go('accounts');return;}
+  ensureInventoryCatalog();
+  const needs=totalsFromItems(autoDemands.map(d=>({foodId:d.foodId,qty:Number(d.qty)||0})));
+  const shortages=needs.map(n=>{const st=db.inventory.find(x=>ingredientKey(x.name)===ingredientKey(n.name));return {name:n.name,need:n.qty,have:Number(st?.qty||0)};}).filter(x=>x.have<x.need);
+  const machineFree={};
+  db.machines.forEach(m=>{machineFree[m.id]=Math.max(Date.now(),...(db.activeTimers||[]).filter(t=>t.status==='running'&&t.machineName===m.name).map(t=>Number(t.endsAt)||Date.now()));});
+  const accFree={};foodAccounts.forEach(a=>{accFree[a.id]=Math.max(Date.now(),...(db.activeTimers||[]).filter(t=>t.accountId===a.id&&t.status==='running').map(t=>Number(t.endsAt)||Date.now()));});
+  const assignments=[];
+  autoDemands.forEach(d=>{
+    const f=db.foods.find(x=>x.id===d.foodId);if(!f)return;
+    const m=db.machines.find(x=>x.id===f.machineId);if(!m||!Number(f.productionMinutes)){assignments.push({foodName:f.name,qty:d.qty,warning:'Chưa gán máy hoặc chưa nhập thời gian sản xuất'});return;}
+    for(let k=0;k<Math.max(1,Math.floor(Number(d.qty)||1));k++){
+      const eligible=foodAccounts.filter(a=>!Array.isArray(a.machineIds)||!a.machineIds.length||a.machineIds.includes(m.id));
+      if(!eligible.length){assignments.push({foodName:f.name,qty:1,warning:`Không có acc được gán máy ${m.name}`});continue;}
+      eligible.sort((a,b)=>Math.max(machineFree[m.id]||Date.now(),accFree[a.id]||Date.now())-Math.max(machineFree[m.id]||Date.now(),accFree[b.id]||Date.now()));
+      const a=eligible[0],start=Math.max(Date.now(),machineFree[m.id]||Date.now(),accFree[a.id]||Date.now()),end=start+Number(f.productionMinutes)*60000;
+      machineFree[m.id]=end;accFree[a.id]=end;
+      assignments.push({foodId:f.id,foodName:f.name,machineId:m.id,machineName:m.name,accountId:a.id,accountName:a.name,startAt:start,endAt:end,qty:1,status:'planned'});
+    }
+  });
+  const valid=assignments.filter(x=>x.foodId&&x.startAt);
+  $('autoResult').innerHTML=`<div class="panel"><h3>Kết quả phân chia</h3>${shortages.length?`<div class="status-ready" style="margin-bottom:10px">⚠ Thiếu nguyên liệu: ${shortages.map(x=>`${esc(x.name)} thiếu ${x.need-x.have}`).join(' · ')}. Lịch chỉ là đề xuất, chưa trừ kho.</div>`:'<div class="status-idle" style="margin-bottom:10px">✓ Tồn kho đủ theo công thức đã khai báo.</div>'}${assignments.map(x=>`<div class="plan-machine"><div class="row between wrap"><b>${esc(x.foodName)} × ${x.qty}</b><span>${x.warning?'<span class="status-ready">'+esc(x.warning)+'</span>':new Date(x.startAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})+' – '+new Date(x.endAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</span></div>${x.accountName?`<div class="muted">${esc(x.machineName)} · ${esc(x.accountName)}</div>`:''}</div>`).join('')}<div class="muted">Tổng thời gian dự kiến: ${valid.length?formatDuration(Math.ceil((Math.max(...valid.map(x=>x.endAt))-Date.now())/60000)):'Chưa tính được'} · ${valid.length} lượt máy</div><button class="btn primary" style="margin-top:12px" onclick="saveAutoSchedule()">Lưu lịch sản xuất</button></div>`;
+  window._autoAssignments=valid;
+}
+function saveAutoSchedule(){
+  const rows=window._autoAssignments||[];if(!rows.length){alert('Không có lịch hợp lệ để lưu.');return;}
+  db.schedules=db.schedules||[];db.schedules.push(...rows.map(x=>({...x,id:uid()})));save();alert('Đã lưu lịch sản xuất.');go('auto');
+}
+function toggleAccountMachine(accountId,machineId,checked){const a=db.accounts.find(x=>x.id===accountId);if(!a)return;const all=db.machines.map(m=>m.id);a.machineIds=Array.isArray(a.machineIds)&&a.machineIds.length?[...a.machineIds]:all.slice();if(checked){if(!a.machineIds.includes(machineId))a.machineIds.push(machineId);}else a.machineIds=a.machineIds.filter(x=>x!==machineId);if(a.machineIds.length===all.length)a.machineIds=[];save();}
+
+/* CATALOG IMPORT / EXPORT */
+function collectIngredientCatalog() {
+  const map = new Map();
+  (db.ingredients || []).forEach(i => {
+    if (i?.name?.trim()) map.set(i.name.trim().toLocaleLowerCase('vi'), { name: i.name.trim(), image: i.image || '' });
+  });
+  (db.inventory || []).forEach(i => {
+    if (!i?.name?.trim()) return;
+    const key = i.name.trim().toLocaleLowerCase('vi');
+    if (!map.has(key)) map.set(key, { name: i.name.trim(), image: i.image || '' });
+    else if (!map.get(key).image && i.image) map.get(key).image = i.image;
+  });
+  (db.foods || []).forEach(f => (f.ingredients || []).forEach(i => {
+    if (!i?.name?.trim()) return;
+    const key = i.name.trim().toLocaleLowerCase('vi');
+    if (!map.has(key)) map.set(key, { name: i.name.trim(), image: i.image || '' });
+    else if (!map.get(key).image && i.image) map.get(key).image = i.image;
+  }));
+  return [...map.values()].sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+}
+function downloadCatalogTemplate(type) {
+  if (!window.XLSX) { alert('Không tải được thư viện Excel. Hãy kiểm tra kết nối internet và tải lại trang.'); return; }
+  const rows = type === 'machines'
+    ? [{ 'Tên máy': 'Lò nướng bánh', 'Ghi chú': 'Ví dụ: sản xuất bánh mì' }]
+    : [{ 'Tên nguyên liệu': 'Lúa mì', 'Ghi chú': 'Ghi chú tùy chọn' }];
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, type === 'machines' ? 'Danh sách máy' : 'Nguyên liệu');
+  downloadExcelWorkbook(wb, `hayday-mau-${type === 'machines' ? 'may' : 'nguyen-lieu'}.xlsx`);
+}
+async function importCatalog(type, file) {
+  if (!file) return;
+  try {
+    if (!window.XLSX) throw new Error('Thư viện Excel chưa tải. Hãy kiểm tra internet và tải lại trang.');
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    if (!rows.length) throw new Error('File Excel không có dữ liệu.');
+    const previewKeys=type==='machines'?['Tên máy','Tên máy móc','Máy','name','Name']:['Tên nguyên liệu','Nguyên liệu','Tên','name','Name'];
+    const previewNames=rows.map(row=>{const k=Object.keys(row).find(key=>previewKeys.some(x=>key.trim().toLocaleLowerCase('vi')===x.toLocaleLowerCase('vi')));return k?String(row[k]||'').trim():'';}).filter(Boolean);
+    const previewUnique=new Set(previewNames.map(x=>x.toLocaleLowerCase('vi')));
+    if(!confirm(`Kiểm tra file Excel ${type==='machines'?'máy':'nguyên liệu'}:\n• ${rows.length} dòng dữ liệu\n• ${previewNames.length} dòng có tên hợp lệ\n• ${previewNames.length-previewUnique.size} tên trùng trong file\n\nTiếp tục nhập?`))return;
+    const nameKeys = type === 'machines'
+      ? ['Tên máy','Tên máy móc','Máy','name','Name']
+      : ['Tên nguyên liệu','Nguyên liệu','Tên','name','Name'];
+    const noteKeys = ['Ghi chú','Mô tả','note','Note'];
+    const pick = (row, keys) => {
+      const key = Object.keys(row).find(k => keys.some(x => k.trim().toLocaleLowerCase('vi') === x.toLocaleLowerCase('vi')));
+      return key ? String(row[key] ?? '').trim() : '';
+    };
+    let added = 0, updated = 0;
+    if (type === 'machines') {
+      const byName = new Map((db.machines || []).map(m => [m.name.trim().toLocaleLowerCase('vi'), m]));
+      rows.forEach(row => {
+        const name = pick(row, nameKeys);
+        if (!name) return;
+        const key = name.toLocaleLowerCase('vi'), note = pick(row, noteKeys), current = byName.get(key);
+        if (current) { if (note) current.note = note; updated++; }
+        else { const m = { id: uid(), name, note, image: '' }; db.machines.push(m); byName.set(key,m); added++; }
+      });
+    } else {
+      db.ingredients = db.ingredients || [];
+      const byName = new Map(db.ingredients.map(i => [i.name.trim().toLocaleLowerCase('vi'), i]));
+      rows.forEach(row => {
+        const name = pick(row, nameKeys);
+        if (!name) return;
+        const key = name.toLocaleLowerCase('vi'), current = byName.get(key);
+        if (current) updated++;
+        else { const ing = { name, image: '' }; db.ingredients.push(ing); byName.set(key,ing); added++; }
+      });
+    }
+    save();
+    $('catalogMsg').textContent = `Đã nhập Excel: thêm ${added}, trùng/đã có ${updated}.`;
+    alert(`Nhập Excel thành công!\\nThêm mới: ${added}\\nĐã có/trùng: ${updated}`);
+  } catch (err) {
+    $('catalogMsg').textContent = 'Không thể nhập: ' + err.message;
+    alert('Không thể nhập file Excel. Hãy tải mẫu Excel và điền đúng cột tên máy hoặc tên nguyên liệu.');
+  }
+}
+
+
+// Excel giới hạn tối đa 32.767 ký tự trong một ô. Ảnh dạng data URL
+// có thể dài hàng trăm nghìn ký tự, vì vậy không đưa chuỗi ảnh vào ô Excel.
+function excelSafeValue(value) {
+  if (typeof value === 'string' && value.startsWith('data:image/')) return '[Ảnh được giữ nguyên trong dữ liệu ứng dụng]';
+  if (typeof value === 'string' && value.length > 32000) return value.slice(0, 31950) + '… [Đã rút gọn vì giới hạn 32.767 ký tự/ô Excel]';
+  return value;
+}
+function excelSafeRows(rows) {
+  return (rows || []).map(row => Object.fromEntries(Object.entries(row || {}).map(([key, value]) => [key, excelSafeValue(value)])));
+}
+function foodCatalogRows() {
+  return excelSafeRows((db.foods || []).map(f => {
+    const machine = (db.machines || []).find(m => m.id === f.machineId)?.name || '';
+    const ingredients = (f.ingredients || []).map(i => `${i.name} x${i.qty || 1}`).join('; ');
+    return { 'Tên Food': f.name || '', 'Máy sản xuất': machine, 'Thời gian (phút)': f.productionMinutes || 0, 'Nguyên liệu': ingredients, 'Ghi chú': f.note || '', 'Ảnh Food': f.image ? '[Ảnh được giữ trong ứng dụng; không xuất chuỗi ảnh vào Excel]' : '' };
+  }));
+}
+function downloadFoodTemplate() {
+  if (!window.XLSX) { alert('Không tải được thư viện Excel.'); return; }
+  const ws = XLSX.utils.json_to_sheet([{ 'Tên Food':'Bánh mì', 'Máy sản xuất':'Lò nướng bánh', 'Thời gian (phút)':15, 'Nguyên liệu':'Lúa mì x2; Trứng x1', 'Ghi chú':'Ví dụ' }]);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Food');
+  downloadExcelWorkbook(wb, 'hayday-mau-food.xlsx');
+}
+function exportFoodCatalog() {
+  if (!window.XLSX) { alert('Không tải được thư viện Excel.'); return; }
+  const rows = foodCatalogRows();
+  if (!rows.length) { alert('Chưa có Food để xuất.'); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(excelSafeRows(rows)), 'Danh sách Food');
+  downloadExcelWorkbook(wb, 'hayday-danh-sach-food.xlsx');
+  $('foodCatalogMsg').textContent = `Đã xuất ${rows.length} Food ra Excel.`;
+}
+async function importFoodCatalog(file) {
+  if (!file) return;
+  try {
+    if (!window.XLSX) throw new Error('Thư viện Excel chưa tải.');
+    const wb = XLSX.read(await file.arrayBuffer(), {type:'array'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+    if (!rows.length) throw new Error('File Excel không có dữ liệu.');
+    const foodNameAliases=['Tên Food','Food','Tên thức ăn','Tên sản phẩm','name','Name'];
+    const previewFoodNames=rows.map(row=>{const k=Object.keys(row).find(key=>foodNameAliases.some(a=>key.trim().toLocaleLowerCase('vi')===a.toLocaleLowerCase('vi')));return k?String(row[k]||'').trim():'';}).filter(Boolean);
+    const uniqueFoodNames=new Set(previewFoodNames.map(x=>x.toLocaleLowerCase('vi')));
+    if(!confirm(`Xem trước nhập Food:\n• ${rows.length} dòng Excel\n• ${previewFoodNames.length} dòng có tên Food\n• ${previewFoodNames.length-uniqueFoodNames.size} tên trùng trong file\n\nLưu ý: Food trùng tên sẽ được cập nhật. Tiếp tục?`))return;
+    const pick = (row, aliases) => {
+      const k = Object.keys(row).find(key => aliases.some(a => key.trim().toLocaleLowerCase('vi') === a.toLocaleLowerCase('vi')));
+      return k ? String(row[k] ?? '').trim() : '';
+    };
+    let added=0, updated=0, skipped=0;
+    rows.forEach(row => {
+      const name=pick(row,['Tên Food','Food','Tên thức ăn','Tên sản phẩm','name','Name']);
+      if (!name) { skipped++; return; }
+      const machineName=pick(row,['Máy sản xuất','Tên máy','Máy','Machine']);
+      const machine=(db.machines||[]).find(m=>m.name.trim().toLocaleLowerCase('vi')===machineName.toLocaleLowerCase('vi'));
+      const time=Number(pick(row,['Thời gian (phút)','Thời gian','Phút','Production minutes']))||0;
+      const note=pick(row,['Ghi chú','Mô tả','Note']);
+      const imageData=pick(row,['Ảnh Food (data URL)','Ảnh Food','Food image','Image']);
+      const ingText=pick(row,['Nguyên liệu','Ingredients']);
+      const ingredients=ingText ? ingText.split(/[;\\n]+/).map(part=>{
+        const match=part.trim().match(/^(.*?)\\s*(?:x|×|\\*)\\s*(\\d+(?:\\.\\d+)?)$/i);
+        const ingName=(match?match[1]:part).trim(), qty=match?Number(match[2]):1;
+        if(!ingName) return null;
+        const known=(db.ingredients||[]).find(i=>i.name.trim().toLocaleLowerCase('vi')===ingName.toLocaleLowerCase('vi'));
+        return {name:ingName,qty,image:known?.image||''};
+      }).filter(Boolean) : [];
+      const current=(db.foods||[]).find(f=>f.name.trim().toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi') && (!machineName || f.machineId===machine?.id));
+      if(current) {
+        current.machineId=machine?.id || current.machineId || '';
+        current.productionMinutes=time || current.productionMinutes || 0;
+        if(ingText) current.ingredients=ingredients;
+        if(note) current.note=note;
+        if(imageData.startsWith('data:image/')) current.image=imageData;
+        updated++;
+      } else {
+        db.foods.push({id:uid(),name,machineId:machine?.id||'',image:imageData.startsWith('data:image/')?imageData:'',ingredients,productionMinutes:time,note,updatedAt:new Date().toISOString()});
+        added++;
+      }
+    });
+    save();
+    $('foodCatalogMsg').textContent=`Đã nhập Food: thêm ${added}, cập nhật ${updated}, bỏ qua ${skipped}.`;
+    alert(`Nhập Food thành công!\\nThêm mới: ${added}\\nCập nhật: ${updated}\\nBỏ qua: ${skipped}`);
+  } catch(err) {
+    $('foodCatalogMsg').textContent='Không thể nhập Food: '+err.message;
+    alert('Không thể nhập Excel Food. Hãy dùng file mẫu và kiểm tra các cột.');
+  }
+}
+
+/* Android-friendly Excel download: Blob + explicit anchor, with share/open fallback. */
+function downloadExcelWorkbook(wb, filename) {
+  try {
+    if (typeof XLSX === 'undefined') throw new Error('Thư viện Excel chưa tải xong. Hãy kiểm tra Internet và tải lại ứng dụng.');
+    const bytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.addEventListener('click', () => setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 15000), { once: true });
+    a.click();
+    setTimeout(() => { if (a.isConnected) a.remove(); }, 2000);
+    // Some Android WebViews ignore download=; expose the generated file if download did not start.
+    setTimeout(() => {
+      if (!document.hidden) {
+        const fallback = document.createElement('div');
+        fallback.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;bottom:90px;background:#fff;border:1px solid #cbd5c0;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0002;color:#24452c';
+        fallback.innerHTML = '<b>File Excel đã được tạo.</b><br><small>Nếu chưa tải xuống, nhấn nút bên dưới để mở/lưu file.</small>';
+        const open = document.createElement('button'); open.textContent = 'Mở / lưu file Excel';
+        open.style.cssText = 'display:block;margin-top:10px;padding:10px 14px;border:0;border-radius:9px;background:#4b8b45;color:white;font-weight:700';
+        open.onclick = () => { const w = window.open(url, '_blank'); if (!w) alert('Trình duyệt đã chặn mở file. Hãy mở ứng dụng bằng Chrome hoặc Samsung Internet.'); fallback.remove(); };
+        fallback.appendChild(open);
+        const close = document.createElement('button'); close.textContent = 'Đóng'; close.style.cssText = 'margin:8px 0 0 10px;padding:8px 12px;border:0;background:#eef4e9;border-radius:8px'; close.onclick = () => fallback.remove(); fallback.appendChild(close);
+        document.body.appendChild(fallback);
+      }
+    }, 1800);
+  } catch (err) {
+    console.error('Excel export error:', err);
+    alert('Không thể tạo file Excel: ' + (err.message || err));
+  }
+}
+
+/* FLEXIBLE BULK EXCEL IMPORT / EXPORT */
+const FLEX_FIELDS = {
+  foods: [
+    ['Tên Food','name'], ['Máy sản xuất','machine'], ['Thời gian (phút)','time'],
+    ['Nguyên liệu','ingredients'], ['Ghi chú','note']
+  ],
+  machines: [['Tên máy','name'], ['Mô tả / Ghi chú','note']],
+  accounts: [['Tên tài khoản','name'], ['Vai trò','role']]
+};
+const FLEX_SHEETS = { foods:'Food', machines:'Máy sản xuất', accounts:'Tài khoản' };
+function flexKey(s){return String(s||'').trim().toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]/g,'');}
+function flexPick(row, aliases){
+  const keys=Object.keys(row||{}), wanted=aliases.map(flexKey);
+  const key=keys.find(k=>wanted.includes(flexKey(k)));
+  return key===undefined?'':String(row[key]??'').trim();
+}
+function flexIngredients(text){
+  return String(text||'').split(/[;\n,]+/).map(part=>{
+    const m=part.trim().match(/^(.*?)\s*(?:x|×|\*)\s*(\d+(?:\.\d+)?)$/i);
+    const name=(m?m[1]:part).trim();
+    return name?{name,qty:m?Number(m[2]):1,image:(db.ingredients||[]).find(i=>String(i.name||'').toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi'))?.image||''}:null;
+  }).filter(Boolean);
+}
+function renderFlexibleExportOptions(){
+  const root=$('flexExportOptions'); if(!root)return;
+  root.innerHTML=Object.entries(FLEX_FIELDS).map(([type,fields])=>`<div style="border:1px solid var(--line);border-radius:11px;padding:11px;margin:9px 0"><label style="display:flex;gap:8px;align-items:center;font-weight:800;margin-bottom:9px"><input type="checkbox" data-flex-type="${type}" checked> ${FLEX_SHEETS[type]}</label><div style="display:flex;flex-wrap:wrap;gap:8px 14px;padding-left:5px">${fields.map(([label,key])=>`<label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" data-flex-field="${type}:${key}" checked> ${label}</label>`).join('')}</div></div>`).join('');
+}
+function setFlexibleExportDefaults(){renderFlexibleExportOptions();}
+function downloadFlexibleTemplate(){
+  if(!window.XLSX){alert('Không tải được thư viện Excel.');return;}
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{'Tên Food':'Bánh mì','Máy sản xuất':'Lò nướng bánh','Thời gian (phút)':15,'Nguyên liệu':'Lúa mì x2; Trứng x1','Ghi chú':'Ví dụ'}]),'Food');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{'Tên máy':'Lò nướng bánh','Mô tả / Ghi chú':'Sản xuất các loại bánh'}]),'Máy sản xuất');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{'Tên tài khoản':'Acc 01','Vai trò':'food'}]),'Tài khoản');
+  downloadExcelWorkbook(wb,'hayday-mau-nhap-hang-loat.xlsx');
+}
+function exportFlexibleCatalog(){
+  if(!window.XLSX){alert('Không tải được thư viện Excel.');return;}
+  const root=$('flexExportOptions'); if(!root)return;
+  const wb=XLSX.utils.book_new(); let exported=0;
+  Object.entries(FLEX_FIELDS).forEach(([type,fields])=>{
+    const typeBox=root.querySelector(`[data-flex-type="${type}"]`);
+    if(!typeBox?.checked)return;
+    const selected=fields.filter(([label,key])=>root.querySelector(`[data-flex-field="${type}:${key}"]`)?.checked);
+    if(!selected.length){alert(`Hãy chọn ít nhất một cột cho danh mục ${FLEX_SHEETS[type]}.`);return;}
+    let source=[];
+    if(type==='foods') source=(db.foods||[]).map(f=>({name:f.name||'',machine:(db.machines||[]).find(m=>m.id===f.machineId)?.name||'',time:f.productionMinutes??'',ingredients:(f.ingredients||[]).map(i=>`${i.name} x${i.qty||1}`).join('; '),note:f.note||''}));
+    if(type==='machines') source=(db.machines||[]).map(m=>({name:m.name||'',note:m.note||''}));
+    if(type==='accounts') source=(db.accounts||[]).map(a=>({name:a.name||'',role:getAccountRoleDefs().find(r=>r.id===accountRole(a))?.label||accountRole(a)||''}));
+    const rows=source.map(item=>Object.fromEntries(selected.map(([label,key])=>[label,item[key]])));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?excelSafeRows(rows):[{'Thông tin':'Không có dữ liệu'}]),FLEX_SHEETS[type]); exported+=rows.length;
+  });
+  if(!wb.SheetNames.length){alert('Bạn chưa chọn danh mục nào để xuất.');return;}
+  downloadExcelWorkbook(wb,'hayday-danh-sach-tuy-chon-'+new Date().toISOString().slice(0,10)+'.xlsx');
+  $('flexExportMsg').textContent=`Đã tạo Excel gồm ${wb.SheetNames.length} sheet, ${exported} dòng dữ liệu.`;
+}
+async function importFlexibleCatalog(file){
+  if(!file)return;
+  try{
+    if(!window.XLSX)throw new Error('Thư viện Excel chưa tải.');
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    const findSheet=(aliases)=>wb.SheetNames.find(n=>aliases.map(flexKey).includes(flexKey(n)));
+    const sheetDefs=[
+      {type:'machines',aliases:['Máy sản xuất','Máy','Machines']},
+      {type:'foods',aliases:['Food','Danh sách Food','Foods']},
+      {type:'accounts',aliases:['Tài khoản','Tài khoản Hay Day','Accounts','Acc']}
+    ];
+    const found=sheetDefs.map(d=>({...d,sheet:findSheet(d.aliases)})).filter(d=>d.sheet);
+    if(!found.length)throw new Error('Không tìm thấy sheet Food, Máy sản xuất hoặc Tài khoản. Hãy dùng file mẫu.');
+    const parsed=found.map(d=>({...d,rows:XLSX.utils.sheet_to_json(wb.Sheets[d.sheet],{defval:''})})).filter(d=>d.rows.length);
+    if(!parsed.length)throw new Error('Các sheet được chọn đều không có dòng dữ liệu.');
+    const summary=parsed.map(d=>`${FLEX_SHEETS[d.type]}: ${d.rows.length} dòng`).join('\n');
+    if(!confirm(`Sẽ nhập các danh mục sau (dữ liệu trùng tên được cập nhật):\n${summary}\n\nTiếp tục?`))return;
+    let added=0,updated=0,skipped=0;
+    // Machines first so Food rows can refer to machines created in this workbook.
+    const ordered=[...parsed].sort((a,b)=>['machines','foods','accounts'].indexOf(a.type)-['machines','foods','accounts'].indexOf(b.type));
+    ordered.forEach(group=>group.rows.forEach(row=>{
+      if(group.type==='machines'){
+        const name=flexPick(row,['Tên máy','Tên máy móc','Máy','name','Name']); if(!name){skipped++;return;}
+        let item=(db.machines||[]).find(x=>String(x.name||'').trim().toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi'));
+        const note=flexPick(row,['Mô tả / Ghi chú','Ghi chú','Mô tả','Note']);
+        if(item){if(note)item.note=note;updated++;}else{db.machines.push({id:uid(),name,note,image:''});added++;}
+      } else if(group.type==='foods'){
+        const name=flexPick(row,['Tên Food','Food','Tên thức ăn','Tên sản phẩm','name','Name']); if(!name){skipped++;return;}
+        const machineName=flexPick(row,['Máy sản xuất','Tên máy','Máy','Machine']);
+        let machine=(db.machines||[]).find(m=>String(m.name||'').trim().toLocaleLowerCase('vi')===machineName.toLocaleLowerCase('vi'));
+        if(machineName&&!machine){machine={id:uid(),name:machineName,note:'',image:''};db.machines.push(machine);added++;}
+        const timeText=flexPick(row,['Thời gian (phút)','Thời gian sản xuất (phút)','Thời gian','Phút','Production minutes']);
+        const time=timeText===''?null:Number(timeText);
+        const ingText=flexPick(row,['Nguyên liệu','Công thức nguyên liệu','Ingredients']);
+        const note=flexPick(row,['Ghi chú','Mô tả','Note']);
+        let item=(db.foods||[]).find(f=>String(f.name||'').trim().toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi')&&(!machineName||f.machineId===machine?.id));
+        if(item){if(machine)item.machineId=machine.id;if(time!==null&&Number.isFinite(time))item.productionMinutes=time;if(ingText)item.ingredients=flexIngredients(ingText);if(note)item.note=note;updated++;}
+        else{db.foods.push({id:uid(),name,machineId:machine?.id||'',image:'',ingredients:flexIngredients(ingText),productionMinutes:time!==null&&Number.isFinite(time)?time:0,note});added++;}
+        (db.ingredients||(db.ingredients=[]));
+        flexIngredients(ingText).forEach(i=>{if(!db.ingredients.some(x=>String(x.name||'').toLocaleLowerCase('vi')===i.name.toLocaleLowerCase('vi')))db.ingredients.push({name:i.name,image:i.image||''});});
+      } else {
+        const name=flexPick(row,['Tên tài khoản','Tên acc','Tài khoản','Acc','name','Name']);if(!name){skipped++;return;}
+        const roleText=flexPick(row,['Vai trò','Nhóm','Role']);
+        const defs=getAccountRoleDefs();
+        const role=defs.find(r=>flexKey(r.id)===flexKey(roleText)||flexKey(r.label)===flexKey(roleText))?.id||'food';
+        let item=(db.accounts||[]).find(a=>String(a.name||'').trim().toLocaleLowerCase('vi')===name.toLocaleLowerCase('vi'));
+        if(item){if(roleText)item.role=role;updated++;}
+        else{db.accounts.push({id:uid(),name,role,createdAt:Date.now()});added++;}
+      }
+    }));
+    save();
+    const msg=`Nhập hoàn tất: thêm ${added}, cập nhật/trùng ${updated}, bỏ qua ${skipped}.`;
+    $('flexImportMsg').textContent=msg;alert(msg);
+  }catch(err){$('flexImportMsg').textContent='Lỗi nhập Excel: '+err.message;alert('Không thể nhập Excel: '+err.message);}
+}
+
+/* BACKUP CURRENT STATE - full JSON snapshot */
+function backupCurrentData() {
+  try {
+    const payload = {
+      format: 'hayday-food-manager-json-backup',
+      version: 1,
+      createdAt: new Date().toISOString(),
+      data: db
+    };
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const filename = 'hayday-backup-current-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0,19) + '.json';
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      const fallback = document.createElement('div');
+      fallback.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;bottom:90px;background:#fff;border:1px solid #cbd5c0;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0002;color:#24452c';
+      fallback.innerHTML = '<b>Đã tạo bản sao lưu JSON.</b><br><small>Nếu điện thoại chưa tự tải file, nhấn nút bên dưới để mở/lưu bản sao lưu.</small>';
+      const open = document.createElement('button');
+      open.textContent = 'Mở / lưu bản sao lưu';
+      open.style.cssText = 'display:block;margin-top:10px;padding:10px 14px;border:0;border-radius:9px;background:#4b8b45;color:white;font-weight:700';
+      open.onclick = () => { const w = window.open(url, '_blank'); if (!w) alert('Trình duyệt đã chặn mở file. Hãy thử mở ứng dụng bằng Chrome.'); fallback.remove(); };
+      fallback.appendChild(open);
+      const close = document.createElement('button');
+      close.textContent = 'Đóng';
+      close.style.cssText = 'margin:8px 0 0 10px;padding:8px 12px;border:0;background:#eef4e9;border-radius:8px';
+      close.onclick = () => fallback.remove();
+      fallback.appendChild(close);
+      document.body.appendChild(fallback);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }, 1200);
+    const msg = $('backupMsg');
+    if (msg) msg.textContent = 'Đã chuẩn bị bản sao lưu dữ liệu hiện tại dạng JSON.';
+  } catch (err) {
+    alert('Không thể tạo bản sao lưu hiện tại: ' + (err.message || err));
+  }
+}
+
+/* BACKUP & RESTORE - Excel */
+function exportBackup() {
+  if (typeof XLSX === 'undefined') {
+    alert('Không tải được thư viện Excel. Hãy kiểm tra kết nối mạng rồi thử lại.');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const addSheet = (name, rows) => {
+    const ws = XLSX.utils.json_to_sheet(excelSafeRows(rows && rows.length ? rows : [{ 'Thông tin': 'Không có dữ liệu' }]));
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  };
+  addSheet('Máy sản xuất', (db.machines || []).map(x => ({ 'Tên máy': x.name || '', 'Ghi chú': x.note || '', 'Ảnh': x.image || '', 'ID': x.id || '' })));
+  addSheet('Food', (db.foods || []).map(x => ({
+    'Tên Food': x.name || '', 'Máy': (db.machines || []).find(m => m.id === x.machineId)?.name || '',
+    'Công thức nguyên liệu': (x.ingredients || []).map(i => `${i.name} x${i.qty || 1}`).join('; '),
+    'Thời gian sản xuất (phút)': x.productionMinutes ?? '', 'Ghi chú': x.note || '', 'Ảnh': x.image || '', 'ID': x.id || '', 'Machine ID': x.machineId || ''
+  })));
+  addSheet('Nguyên liệu', (db.ingredients || []).map(x => typeof x === 'string' ? ({ 'Tên nguyên liệu': x }) : ({ 'Tên nguyên liệu': x.name || '', 'Ảnh': x.image || '', 'Ghi chú': x.note || '', 'ID': x.id || '' })));
+  addSheet('Kế hoạch', (db.plans || []).map(x => ({ 'Dữ liệu': JSON.stringify(x) })));
+  addSheet('Bộ đếm thời gian', (db.activeTimers || []).map(x => ({ 'Dữ liệu': JSON.stringify(x) })));
+  addSheet('Tài khoản Hay Day', (db.accounts || []).map(x => ({ 'Dữ liệu': JSON.stringify(x) })));
+  // Payload sheet preserves all app data, including IDs, formulas, image data and settings.
+  const serialized = JSON.stringify({ format: 'hayday-food-manager', version: 1, data: db });
+  const chunks = [];
+  for (let i = 0; i < serialized.length; i += 30000) chunks.push({ Part: chunks.length + 1, Data: serialized.slice(i, i + 30000) });
+  const restoreSheet = XLSX.utils.json_to_sheet(chunks);
+  XLSX.utils.book_append_sheet(wb, restoreSheet, 'RestoreData');
+  restoreSheet['!sheetHidden'] = 1;
+  downloadExcelWorkbook(wb, 'hayday-backup-' + new Date().toISOString().slice(0,10) + '.xlsx');
+}
+async function importBackup(file) {
+  if (!file) return;
+  try {
+    if (typeof XLSX === 'undefined') throw new Error('Không tải được thư viện Excel.');
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const ws = wb.Sheets['RestoreData'];
+    if (!ws) throw new Error('Không tìm thấy dữ liệu sao lưu. Hãy chọn file Excel được xuất từ website.');
+    const rows = XLSX.utils.sheet_to_json(ws);
+    const serialized = rows.sort((a,b) => Number(a.Part) - Number(b.Part)).map(r => r.Data || '').join('');
+    const obj = JSON.parse(serialized);
+    if (!obj.data || obj.format !== 'hayday-food-manager') throw new Error('File sao lưu không hợp lệ.');
+    if (!confirm('Nhập dữ liệu sao lưu sẽ thay thế toàn bộ dữ liệu hiện tại. Bạn có muốn tiếp tục?')) return;
+    db = obj.data;
+    db.activeTimers = Array.isArray(db.activeTimers) ? db.activeTimers : [];
+    db.accounts = Array.isArray(db.accounts) ? db.accounts : [];
+    db.plans = Array.isArray(db.plans) ? db.plans : [];
+    db.ingredients = Array.isArray(db.ingredients) ? db.ingredients : [];
+    db.inventory = Array.isArray(db.inventory) ? db.inventory : [];
+    db.inventory.forEach(x=>{if(!('accountId' in x))x.accountId='';});
+    db.schedules = Array.isArray(db.schedules) ? db.schedules : [];
+    save();
+    alert('Khôi phục dữ liệu từ Excel thành công!');
+  } catch(e) { alert('Không thể nhập file Excel: ' + e.message); }
+}
+function resetLocal() {
+  if (confirm('Xóa tất cả dữ liệu? Bạn có thể dùng Undo để khôi phục ngay sau thao tác này.')) { db = defaultData(); save(); }
+}
+
+$('foodSearch').addEventListener('input', renderFoods);
+$('foodMachine').addEventListener('change', renderFoods);
+$('calcSearch').addEventListener('input', renderCalc);
+
+
+$('accountForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const role = document.querySelector('input[name="accountRoleChoice"]:checked')?.value;
+  if (!getAccountRoleDefs().some(r=>r.id===role)) { alert('Vui lòng chọn vai trò tài khoản.'); return; }
+
+  if (editingAccountRoleId) {
+    const account = (db.accounts||[]).find(x=>x.id===editingAccountRoleId);
+    if (!account) { $('accountDialog').close(); return; }
+    const current = accountRole(account);
+    const active = (db.activeTimers||[]).some(t=>t.accountId===account.id&&['running','done'].includes(t.status));
+    if (active && role!=='food' && current==='food') {
+      alert('Acc đang có mẻ Food chạy hoặc chờ thu hoạch. Hãy thu hoạch/xử lý các mẻ trước khi đổi vai trò.');
+      return;
+    }
+    account.role = role;
+  } else {
+    const clean = $('accountNameInput').value.trim();
+    if (!clean) { $('accountNameInput').focus(); alert('Tên tài khoản không được để trống.'); return; }
+    db.accounts = db.accounts || [];
+    if (db.accounts.some(a=>a.name.toLowerCase()===clean.toLowerCase())) {
+      alert('Tên tài khoản này đã tồn tại.'); $('accountNameInput').focus(); return;
+    }
+    db.accounts.push({id:uid(),name:clean,role,createdAt:Date.now()});
+  }
+  $('accountDialog').close();
+  editingAccountRoleId = null;
+  save();
+});
+
+navBuild();
+renderFlexibleExportOptions();
+render();
+</script>
+</body>
+</html>
